@@ -42,20 +42,21 @@
         .s-label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .s-input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         .s-input.error { border-color: red; }
+        .s-check { display: flex; align-items: center; gap: 10px; margin: 20px 0; background: #111; padding: 15px; border-radius: 10px; }
         
         .btn-action-row { display: flex; gap: 10px; margin-top: 30px; }
         .btn-save { background: #28a745; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; flex: 2; cursor: pointer; }
         .btn-cancel { background: #333; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; cursor: pointer; }
+        .btn-reset { background: #d9534f; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; cursor: pointer; }
 
         .member-item { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 10px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #222; }
         .mem-name { font-weight: bold; font-size: 14px; }
+        .mem-ctrl { display: flex; gap: 5px; }
         .role-sel { background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 5px; font-size: 12px; }
         .kick-btn { background: #d9534f; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-weight: bold; cursor: pointer; }
 
         .win-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; background: #0a0a0a; border: 5px solid red; border-radius: 30px; padding: 30px; text-align: center; z-index: 2000; box-shadow: 0 0 100px rgba(255,0,0,0.5); }
         .win-overlay-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1999; }
-        
-        .role-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 900; background: #333; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -109,6 +110,7 @@
         <p id="win-result-text" style="font-size:16px; color:#ccc; margin-bottom:5px;"></p>
         <p id="win-payment-text" style="font-size:20px; color:#00ff00; font-weight:bold; margin-bottom:25px;"></p>
         <button class="btn-save" style="width:100%; font-size:18px;" onclick="closeWinAndReset()">NEUES SPIEL STARTEN</button>
+        <button style="background:none; border:none; color:#666; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="closeWinOnly()">Fenster schließen (Korrektur möglich)</button>
     </div>
 
     <div id="settings" class="overlay">
@@ -129,60 +131,56 @@
                 <div class="s-row" style="flex:1;"><label class="s-label">Folge Stock</label><input type="number" id="set-pn" class="s-input"></div>
             </div>
             <div style="display:flex; gap:10px;">
+                <div class="s-row" style="flex:1;"><label class="s-label">Moar Punkte</label><input type="number" id="set-pw" class="s-input"></div>
                 <div class="s-row" style="flex:1;"><label class="s-label">Einfach (€)</label><input type="number" id="set-pe" class="s-input" step="0.10"></div>
-                <div class="s-row" style="flex:1;"><label class="s-label">Dreifach (€)</label><input type="number" id="set-pd" class="s-input" step="0.10"></div>
             </div>
+            <div class="s-row"><label class="s-label">Dreifach-Sieg Preis (€)</label><input type="number" id="set-pd" class="s-input" step="0.10"></div>
+            <div class="s-check">
+                <input type="checkbox" id="set-reset" style="transform:scale(1.5);">
+                <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
+            </div>
+            
             <div class="btn-action-row">
                 <button class="btn-cancel" onclick="closeSettings()">ZURÜCK</button>
                 <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
             </div>
-            <button class="btn-nav" style="width:100%; margin-top:15px; background:#444; color:white;" onclick="resetToDefault()">STANDARD-WERTE LADEN</button>
+            <button class="btn-reset" onclick="resetToDefault()">AUF STANDARD ZURÜCKSETZEN</button>
         </div>
         
         <div id="s2" class="s-body" style="display:none">
             <div id="online-setup">
-                <label class="s-label">Dein Spielername</label>
-                <input id="user-name" class="s-input" placeholder="Name..." style="margin-bottom:20px;">
+                <label class="s-label">Dein Spielername (Pflicht)</label>
+                <input id="user-name" class="s-input" placeholder="Name eingeben..." style="margin-bottom:20px;">
                 
-                <div id="admin-default-box" style="background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
-                     <label class="s-label">Standard für neue Mitspieler</label>
-                     <select id="default-role-sel" class="s-input" onchange="if(room && myRole==='admin') update(ref(db, 'rooms/'+room+'/settings'), {defaultRole: this.value})">
-                         <option value="viewer">Zuschauer (Nur gucken)</option>
+                <div style="background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
+                     <label class="s-label">Standard-Rechte für Neue</label>
+                     <select id="default-role-sel" class="s-input" style="padding:10px;">
+                         <option value="viewer">Zuschauer (Darf nix)</option>
                          <option value="player">Spieler (Darf zählen)</option>
                      </select>
                 </div>
 
-                <button class="btn-nav" style="width:100%; background:var(--color-a); color:white; margin-bottom:20px;" onclick="hostGame()">RAUM ERÖFFNEN</button>
+                <button class="btn-nav" style="width:100%; background:#444; color:white; margin-bottom:20px;" onclick="hostGame()">RAUM ERÖFFNEN (HOST)</button>
+                
+                <div style="text-align:center; margin:15px 0; color:#555; font-weight:bold;">ODER BEITRETEN</div>
                 <div style="display:flex; gap:10px;">
                     <input id="join-code" class="s-input" placeholder="CODE" style="text-transform:uppercase; flex:1;">
-                    <button class="btn-nav" style="flex:1; background:#28a745; color:white;" onclick="joinGame()">BEITRETEN</button>
+                    <button class="btn-nav" style="flex:1; background:var(--color-a); color:white;" onclick="joinGame()">BEITRETEN</button>
                 </div>
-                <button class="btn-cancel" style="width:100%; margin-top:30px;" onclick="closeSettings()">ZURÜCK ZUM SPIEL</button>
             </div>
 
             <div id="online-active" style="display:none;">
                 <div style="text-align:center; margin-bottom:20px;">
+                    <p style="color:#666; font-size:12px; margin:0;">CODE:</p>
                     <h1 id="room-code-display" style="font-size:50px; color:#00ff00; margin:0;">-----</h1>
-                    <div id="role-badge-ui" class="role-badge">ROLLE: ...</div>
                 </div>
                 
                 <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin-bottom:20px;">WhatsApp Teilen</button>
                 
-                <div id="live-admin-settings" style="display:none; background:#111; border:1px solid #333; padding:10px; border-radius:10px; margin-bottom:15px;">
-                    <label class="s-label">Neue Spieler werden automatisch:</label>
-                    <select id="live-default-role" class="s-input" style="font-size:12px; padding:5px;" onchange="updateDefaultRole(this.value)">
-                        <option value="viewer">Zuschauer</option>
-                        <option value="player">Spieler</option>
-                    </select>
-                </div>
-
-                <label class="s-label">MITGLIEDER</label>
+                <label class="s-label">MITGLIEDER LISTE</label>
                 <div id="member-list" style="margin-bottom:20px;"></div>
                 
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-cancel" style="flex:1; background:#d9534f;" onclick="leaveRoom()">VERLASSEN</button>
-                    <button class="btn-save" style="flex:1;" onclick="closeSettings()">ZUM SPIEL</button>
-                </div>
+                <button class="btn-cancel" style="width:100%; background:#d9534f;" onclick="leaveRoom()">RAUM VERLASSEN</button>
             </div>
         </div>
     </div>
@@ -200,17 +198,30 @@
         let state = { ga:0, pa:0, gb:0, pb:0 };
         let history = [JSON.stringify(state)];
         let hIdx = 0;
+
         let room = null;
         let myRole = 'admin'; 
         let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
         localStorage.setItem('es_uid', myId);
 
+        // --- WAKE LOCK (DISPLAY ANHALTEN) ---
         let wakeLock = null;
-        async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {}
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+        });
+
+        const haptic = () => { if(navigator.vibrate) navigator.vibrate(200); };
 
         window.addStock = (team, count) => {
             if(myRole === 'viewer') return;
-            if(navigator.vibrate) navigator.vibrate(100);
+            haptic();
             let n = JSON.parse(history[hIdx]);
             if(team === 'A') {
                 let p = (n.pa === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
@@ -221,14 +232,14 @@
                 n.pb += p;
                 if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.reset) n.pa = 0; }
             }
-            if(n.ga >= 3 || n.gb >= 3) triggerWin(n);
+            if((n.ga + n.gb >= 3) || n.ga === 3 || n.gb === 3) { triggerWin(n); }
             pushHistory(n);
         };
 
         function pushHistory(n) {
             history = history.slice(0, hIdx + 1);
             history.push(JSON.stringify(n));
-            if(history.length > 15) history.shift(); else hIdx++;
+            if(history.length > 11) history.shift(); else hIdx++;
             state = n;
             syncToCloud();
             render();
@@ -236,6 +247,7 @@
 
         window.historyStep = (dir) => {
             if(myRole === 'viewer') return;
+            haptic();
             if(dir === -1 && hIdx > 0) hIdx--;
             if(dir === 1 && hIdx < history.length - 1) hIdx++;
             state = JSON.parse(history[hIdx]);
@@ -245,6 +257,7 @@
 
         window.resetGame = () => {
             if(myRole === 'viewer') return;
+            haptic();
             state = { ga:0, pa:0, gb:0, pb:0 };
             history = [JSON.stringify(state)];
             hIdx = 0;
@@ -253,10 +266,15 @@
         };
 
         function triggerWin(n) {
+            const winA = n.ga > n.gb;
             const is30 = (n.ga === 3 || n.gb === 3) && (n.ga === 0 || n.gb === 0);
+            const winner = winA ? config.na : config.nb;
+            const loser = winA ? config.nb : config.na;
+            const preis = is30 ? config.pd : config.pe;
             document.getElementById('win-label').innerText = is30 ? "DREIFACHSIEG" : "EINFACHSIEG";
             document.getElementById('win-score-display').innerText = `${n.ga} : ${n.gb}`;
-            document.getElementById('win-payment-text').innerText = `Verlierer zahlt ${(is30 ? config.pd : config.pe).toFixed(2)} €`;
+            document.getElementById('win-result-text').innerText = `${winner} hat gewonnen!`;
+            document.getElementById('win-payment-text').innerText = `${loser} zahlt ${preis.toFixed(2).replace('.',',')} €`;
             document.getElementById('win-overlay-bg').style.display = 'block';
             document.getElementById('win-modal').style.display = 'block';
         }
@@ -265,6 +283,10 @@
             document.getElementById('win-overlay-bg').style.display = 'none';
             document.getElementById('win-modal').style.display = 'none';
             resetGame();
+        };
+        window.closeWinOnly = () => {
+             document.getElementById('win-overlay-bg').style.display = 'none';
+             document.getElementById('win-modal').style.display = 'none';
         };
 
         function render() {
@@ -276,18 +298,10 @@
             document.getElementById('disp-nb').innerText = config.nb;
             document.documentElement.style.setProperty('--color-a', config.ca);
             document.documentElement.style.setProperty('--color-b', config.cb);
+            document.getElementById('disp-na').style.color = config.ca;
+            document.getElementById('disp-nb').style.color = config.cb;
             document.getElementById('undo').disabled = (hIdx <= 0);
             document.getElementById('redo').disabled = (hIdx >= history.length - 1);
-            
-            const badge = document.getElementById('role-badge-ui');
-            if(badge) {
-                badge.innerText = "ROLLE: " + myRole.toUpperCase();
-                badge.style.color = myRole === 'admin' ? '#00ff00' : (myRole === 'player' ? '#00BFFF' : '#888');
-            }
-            
-            // Admin-spezifische UI Elemente
-            const adminSettings = document.getElementById('live-admin-settings');
-            if(adminSettings) adminSettings.style.display = (myRole === 'admin') ? 'block' : 'none';
         }
 
         window.openSettings = () => {
@@ -295,32 +309,46 @@
             document.getElementById('set-nb').value = config.nb;
             document.getElementById('set-ca').value = config.ca;
             document.getElementById('set-cb').value = config.cb;
+            document.getElementById('set-p1').value = config.p1;
+            document.getElementById('set-pn').value = config.pn;
+            document.getElementById('set-pw').value = config.pw;
             document.getElementById('set-pe').value = config.pe;
             document.getElementById('set-pd').value = config.pd;
+            document.getElementById('set-reset').checked = config.reset;
             document.getElementById('default-role-sel').value = config.defaultRole || 'viewer';
             document.getElementById('settings').style.display = 'block';
         };
+
+        window.closeSettings = () => { document.getElementById('settings').style.display = 'none'; };
 
         window.saveSettings = () => {
             config.na = document.getElementById('set-na').value;
             config.nb = document.getElementById('set-nb').value;
             config.ca = document.getElementById('set-ca').value;
             config.cb = document.getElementById('set-cb').value;
+            config.p1 = parseInt(document.getElementById('set-p1').value);
+            config.pn = parseInt(document.getElementById('set-pn').value);
+            config.pw = parseInt(document.getElementById('set-pw').value);
             config.pe = parseFloat(document.getElementById('set-pe').value);
             config.pd = parseFloat(document.getElementById('set-pd').value);
+            config.reset = document.getElementById('set-reset').checked;
             config.defaultRole = document.getElementById('default-role-sel').value;
             localStorage.setItem('es_final_v1', JSON.stringify(config));
-            syncToCloud();
+            if(room && myRole === 'admin') update(ref(db, 'rooms/' + room), { settings: config });
             closeSettings();
             render();
         };
 
-        window.closeSettings = () => { document.getElementById('settings').style.display = 'none'; };
+        window.resetToDefault = () => {
+            localStorage.clear();
+            location.reload();
+        };
 
-        window.updateDefaultRole = (val) => {
-            if(room && myRole === 'admin') {
-                update(ref(db, `rooms/${room}/settings`), { defaultRole: val });
-            }
+        window.setTab = (n) => {
+            document.getElementById('s1').style.display = n === 1 ? 'block' : 'none';
+            document.getElementById('s2').style.display = n === 2 ? 'block' : 'none';
+            document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab';
+            document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab';
         };
 
         function syncToCloud() {
@@ -331,36 +359,40 @@
 
         window.hostGame = () => {
             const name = document.getElementById('user-name').value;
-            if(!name) return;
+            if(!name) { document.getElementById('user-name').classList.add('error'); return; }
             room = Math.random().toString(36).substr(2, 5).toUpperCase();
             myRole = 'admin';
             const memberRef = ref(db, `rooms/${room}/members/${myId}`);
             onDisconnect(memberRef).remove();
             set(ref(db, 'rooms/' + room), { 
-                state, settings: config, members: { [myId]: { name, role: 'admin' } } 
+                state, 
+                settings: config, 
+                members: { [myId]: { name, role: 'admin' } } 
             });
             initLiveSession();
         };
 
         window.joinGame = () => {
             const name = document.getElementById('user-name').value;
+            if(!name) { document.getElementById('user-name').classList.add('error'); return; }
             const c = document.getElementById('join-code').value.toUpperCase();
-            if(!name || !c) return;
+            if(!c) return;
             onValue(ref(db, 'rooms/' + c), (snap) => {
                 if(snap.exists()) {
                     room = c;
                     const data = snap.val();
-                    myRole = data.settings?.defaultRole || 'viewer';
-                    const mRef = ref(db, `rooms/${room}/members/${myId}`);
-                    onDisconnect(mRef).remove();
-                    update(mRef, { name, role: myRole });
+                    const joinRole = data.settings?.defaultRole || 'viewer';
+                    myRole = joinRole; 
+                    const memberRef = ref(db, `rooms/${room}/members/${myId}`);
+                    onDisconnect(memberRef).remove();
+                    update(memberRef, { name, role: joinRole });
                     initLiveSession();
-                } else alert("Code falsch!");
+                } else { alert("Raum nicht gefunden!"); }
             }, { onlyOnce: true });
         };
 
         function initLiveSession() {
-            requestWakeLock();
+            requestWakeLock(); // Start Wake Lock
             document.getElementById('online-setup').style.display = 'none';
             document.getElementById('online-active').style.display = 'block';
             document.getElementById('room-code-display').innerText = room;
@@ -370,19 +402,23 @@
                 const data = snap.val();
                 if(!data) return;
                 state = data.state;
-                if(myRole !== 'admin' && data.settings) {
-                    config = data.settings;
-                    document.getElementById('live-default-role').value = config.defaultRole;
-                }
-                if(data.members && data.members[myId]) {
+                if(myRole !== 'admin' && data.settings) config = data.settings;
+                
+                if(data.members) {
+                    // Falls ich gelöscht wurde (z.B. Kick), zurück zu Lokal
+                    if(!data.members[myId]) { leaveRoom(); return; }
+                    
                     myRole = data.members[myId].role;
-                    const keys = Object.keys(data.members).sort();
-                    if(!Object.values(data.members).some(m => m.role === 'admin') && keys[0] === myId) {
-                        myRole = 'admin';
-                        update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' });
+                    const memKeys = Object.keys(data.members).sort();
+                    const hasAdmin = memKeys.some(k => data.members[k].role === 'admin');
+                    
+                    // SCHNELLE ADMIN NACHFOLGE
+                    if(!hasAdmin && memKeys.length > 0) {
+                         if(memKeys[0] === myId) {
+                             myRole = 'admin';
+                             update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' }).then(() => syncToCloud());
+                         }
                     }
-                } else if(data.members && !data.members[myId]) {
-                    leaveRoom();
                 }
                 render();
                 renderMemberList(data.members || {});
@@ -396,44 +432,42 @@
                 const m = members[uid];
                 const div = document.createElement('div');
                 div.className = 'member-item';
-                let ctrls = (myRole === 'admin' && uid !== myId) ? `
-                    <div style="display:flex; gap:5px;">
-                        <select onchange="updateMemberRole('${uid}', this.value)" class="role-sel">
+                let controls = (myRole === 'admin' && uid !== myId) ? `
+                    <div class="mem-ctrl">
+                        <select onchange="changeRole('${uid}', this.value)" class="role-sel">
                             <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
                             <option value="player" ${m.role==='player'?'selected':''}>Spieler</option>
                             <option value="viewer" ${m.role==='viewer'?'selected':''}>Zuschauer</option>
                         </select>
-                        <button class="kick-btn" onclick="kick('${uid}')">🗑️</button>
-                    </div>` : `<span style="font-size:10px; color:#666;">${m.role.toUpperCase()}</span>`;
-                div.innerHTML = `<span class="mem-name">${m.name} ${uid===myId?'(ICH)':''}</span>${ctrls}`;
+                        <button class="kick-btn" onclick="kickUser('${uid}')">🗑️</button>
+                    </div>` : `<span style="font-size:12px; color:#888;">${m.role.toUpperCase()}</span>`;
+                div.innerHTML = `<span class="mem-name">${m.name} ${uid===myId?'(Du)':''}</span>${controls}`;
                 list.appendChild(div);
             });
         }
 
-        window.updateMemberRole = (uid, r) => update(ref(db, `rooms/${room}/members/${uid}`), { role: r });
-        window.kick = (uid) => remove(ref(db, `rooms/${room}/members/${uid}`));
-        window.setTab = (n) => {
-            document.getElementById('s1').style.display = n === 1 ? 'block' : 'none';
-            document.getElementById('s2').style.display = n === 2 ? 'block' : 'none';
-            document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab';
-            document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab';
-        };
+        window.changeRole = (uid, newRole) => { update(ref(db, `rooms/${room}/members/${uid}`), { role: newRole }); };
+        window.kickUser = (uid) => { if(confirm("Entfernen?")) remove(ref(db, `rooms/${room}/members/${uid}`)); };
 
         window.leaveRoom = () => {
             room = null; myRole = 'admin';
             document.getElementById('online-setup').style.display = 'block';
             document.getElementById('online-active').style.display = 'none';
             document.getElementById('room-info').innerText = "LOKAL";
+            config = JSON.parse(localStorage.getItem('es_final_v1')) || {...defaultConfig};
             render();
         };
 
         window.shareWhatsApp = () => {
             const url = window.location.href.split('?')[0] + "?join=" + room;
-            window.open(`https://wa.me/?text=${encodeURIComponent("Eisstock Profi Spielstand live: " + url)}`);
+            window.open(`https://wa.me/?text=${encodeURIComponent("Eisstock Profi beitreten: " + url)}`);
         };
-        
-        window.resetToDefault = () => { if(confirm("Alle Einstellungen zurücksetzen?")) { localStorage.clear(); location.reload(); }};
 
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('join')) {
+            document.getElementById('join-code').value = urlParams.get('join');
+            openSettings(); setTab(2);
+        }
         render();
     </script>
 </body>
