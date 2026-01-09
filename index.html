@@ -6,13 +6,11 @@
     
     <title>Eisstockprofi Web</title>
     <meta name="apple-mobile-web-app-title" content="Eisstockprofi Web">
-    <meta name="application-name" content="Eisstockprofi Web">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
-    <link rel="shortcut icon" type="image/png" href="icon.png">
 
     <style>
         body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; user-select: none; -webkit-user-select: none; }
@@ -32,13 +30,14 @@
         #settings-screen, #win-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; overflow-y: auto; padding: 20px; box-sizing: border-box; }
         input { width: 100%; padding: 10px; margin: 10px 0; background: #111; color: white; border: 1px solid #333; }
         .btn-save { background: #00BFFF; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
-        #win-screen { border: 5px solid red; }
-        .win-price { font-size: 50px; color: yellow; font-weight: bold; }
+        .btn-finish { background: #228B22; color: white; border: none; padding: 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 20px; margin-top: 30px; }
+        #win-screen { border: 10px solid #B22222; }
+        .win-price { font-size: 60px; color: yellow; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <button class="btn-reset" onclick="newGame()">↺ NEUES SPIEL</button>
+        <button class="btn-reset" onclick="hardReset()">↺ RESET</button>
         <button class="btn-settings" onclick="openSettings()">⚙️</button>
     </div>
     <div class="scoreboard">
@@ -71,28 +70,31 @@
         <button class="btn-nav" onclick="undo()">← KORREKTUR</button>
         <button class="btn-nav" onclick="redo()">VORWÄRTS →</button>
     </div>
+
     <div id="settings-screen">
         <h2 style="color:#00BFFF">EINSTELLUNGEN</h2>
-        <label>Name Team A (Blau):</label><input type="text" id="set-name-a" value="TEAM A">
-        <label>Name Team B (Orange):</label><input type="text" id="set-name-b" value="TEAM B">
-        <label>Punkte 1. Stock:</label><input type="number" id="set-p1" value="6">
-        <label>Punkte weitere:</label><input type="number" id="set-pNext" value="3">
-        <label>Sieg bei:</label><input type="number" id="set-pWin" value="12">
-        <label>Preis Einfach-Sieg (€):</label><input type="number" id="set-betN" value="0.50" step="0.10">
-        <label>Preis Dreifach-Sieg (€):</label><input type="number" id="set-betC" value="1.50" step="0.10">
-        <label><input type="checkbox" id="set-reset" checked> Gegner bei Sieg auf 0 setzen</label>
-        <button class="btn-save" onclick="saveSettings()">SPEICHERN & ZURÜCK</button>
+        <label>Name Team A:</label><input type="text" id="set-name-a">
+        <label>Name Team B:</label><input type="text" id="set-name-b">
+        <label>Punkte 1. Stock:</label><input type="number" id="set-p1">
+        <label>Punkte weitere:</label><input type="number" id="set-pNext">
+        <label>Moar-Sieg bei:</label><input type="number" id="set-pWin">
+        <label>Einfach-Sieg Preis (€):</label><input type="number" id="set-betN" step="0.10">
+        <label>Dreifach-Sieg Preis (€):</label><input type="number" id="set-betC" step="0.10">
+        <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
     </div>
+
     <div id="win-screen">
-        <h2 style="color:red">STOPP - PARTIE BEENDET</h2>
-        <p id="win-type" style="color:gray"></p>
-        <h1 id="win-winner" style="color:green; font-size: 35px;"></h1>
-        <p id="win-loser-text"></p>
+        <div style="text-align:right; padding: 10px;"><button onclick="closeWinScreen()" style="background:none; color:white; border:none; font-size:35px;">✕</button></div>
+        <h2 id="win-label" style="color:#B22222; font-size:28px; margin-top:0;">PARTIE BEENDET</h2>
+        <p id="win-type" style="color:white; font-size:22px; font-weight:bold;"></p>
+        <h1 id="win-winner" style="color:green; font-size: 45px; margin: 15px 0;"></h1>
+        <p id="win-loser-text" style="font-size:20px;"></p>
         <div class="win-price" id="win-price-display"></div>
-        <button class="btn-save" onclick="closeWinScreen()">ZURÜCK ZUM STAND</button>
+        <button class="btn-finish" onclick="hardReset()">NÄCHSTE PARTIE STARTEN</button>
     </div>
+
     <script>
-        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5};
         let history = JSON.parse(localStorage.getItem('eisstock_history')) || [{ga:0, pa:0, gb:0, pb:0}];
         let currentIndex = JSON.parse(localStorage.getItem('eisstock_index')) || 0;
 
@@ -113,7 +115,12 @@
             document.getElementById('display-team-a').innerText = settings.teamA;
             document.getElementById('display-team-b').innerText = settings.teamB;
             
-            if (cur.ga + cur.gb >= 3) showWinner(cur);
+            // Partie beendet wenn SUMME der Moare = 3 ist
+            if (cur.ga + cur.gb >= 3) {
+                showWinner(cur);
+            } else {
+                document.getElementById('win-screen').style.display = 'none';
+            }
             saveAll();
         }
 
@@ -121,41 +128,47 @@
             vibrate();
             let last = history[currentIndex];
             let next = {...last};
-            if (team === 'A') {
-                let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-                next.pa += earned;
-                if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
-            } else {
-                let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-                next.pb += earned;
-                if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+            // Nur zählen wenn noch keine 3 Moare gespielt wurden
+            if (last.ga + last.gb < 3) {
+                if (team === 'A') {
+                    let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                    next.pa += earned;
+                    if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; next.pb = 0; }
+                } else {
+                    let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                    next.pb += earned;
+                    if (next.pb >= settings.pWin) { next.gb++; next.pa = 0; next.pb = 0; }
+                }
+                history = history.slice(0, currentIndex + 1);
+                history.push(next);
+                currentIndex++;
+                updateUI();
             }
-            history = history.slice(0, currentIndex + 1);
-            history.push(next);
-            currentIndex++;
-            updateUI();
         }
 
         function undo() { vibrate(); if (currentIndex > 0) { currentIndex--; updateUI(); } }
         function redo() { vibrate(); if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
         
-        function newGame() {
+        function hardReset() {
             vibrate();
-            let next = {ga:0, pa:0, gb:0, pb:0};
-            history = history.slice(0, currentIndex + 1);
-            history.push(next);
-            currentIndex++;
+            history = [{ga:0, pa:0, gb:0, pb:0}];
+            currentIndex = 0;
+            document.getElementById('win-screen').style.display = 'none';
             updateUI();
         }
 
         function showWinner(cur) {
-            let isClean = (cur.ga === 3 || cur.gb === 3);
             let winner = cur.ga > cur.gb ? settings.teamA : settings.teamB;
             let loser = cur.ga > cur.gb ? settings.teamB : settings.teamA;
-            document.getElementById('win-type').innerText = (isClean ? "DREIFACH-SIEG" : "EINFACH-SIEG") + ` (${cur.ga}:${cur.gb})`;
+            let winScore = cur.ga > cur.gb ? cur.ga : cur.gb;
+            let loseScore = cur.ga > cur.gb ? cur.gb : cur.ga;
+            
+            let isDreifach = (loseScore === 0);
+            
+            document.getElementById('win-type').innerText = isDreifach ? `DREIFACH-SIEG (3:0)` : `EINFACH-SIEG (${winScore}:${loseScore})`;
             document.getElementById('win-winner').innerText = winner + " GEWINNT!";
             document.getElementById('win-loser-text').innerText = loser + " zahlt:";
-            document.getElementById('win-price-display').innerText = (isClean ? settings.betC : settings.betN).toFixed(2) + " €";
+            document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
             document.getElementById('win-screen').style.display = 'block';
         }
 
@@ -168,7 +181,6 @@
             document.getElementById('set-pWin').value = settings.pWin;
             document.getElementById('set-betN').value = settings.betN;
             document.getElementById('set-betC').value = settings.betC;
-            document.getElementById('set-reset').checked = settings.reset;
             document.getElementById('settings-screen').style.display = 'block';
         }
 
@@ -183,7 +195,6 @@
             settings.pWin = parseInt(document.getElementById('set-pWin').value);
             settings.betN = parseFloat(document.getElementById('set-betN').value);
             settings.betC = parseFloat(document.getElementById('set-betC').value);
-            settings.reset = document.getElementById('set-reset').checked;
             document.getElementById('settings-screen').style.display = 'none';
             updateUI();
         }
