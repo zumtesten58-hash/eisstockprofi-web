@@ -32,9 +32,9 @@
         .btn-nav { background: #E0E0E0; color: black; border: none; padding: 20px; border-radius: 10px; font-weight: 900; width: 48%; cursor: pointer; }
         
         #settings-screen, #win-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #111; color: white; border: 1px solid #333; border-radius: 5px; }
-        .color-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        input[type="color"] { border: none; width: 50px; height: 30px; cursor: pointer; background: none; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #111; color: white; border: 1px solid #333; border-radius: 5px; font-size: 16px; }
+        .color-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; margin-top: 15px; }
+        input[type="color"] { border: none; width: 60px; height: 40px; cursor: pointer; background: none; }
         
         .btn-save { background: #228B22; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
         .btn-finish { background: #228B22; color: white; border: none; padding: 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 20px; margin-top: 30px; }
@@ -50,25 +50,25 @@
 
     <div class="scoreboard">
         <div class="score-card" id="card-a">
-            <div id="display-team-a" style="font-weight:bold; color: var(--color-a);">TEAM A</div>
+            <div id="display-team-a" style="font-weight:bold; color: var(--color-a);">Team A</div>
             <div id="games-a" class="points-big">0</div>
             <div id="partial-a">TEIL: 0</div>
         </div>
         <div class="score-card" id="card-b">
-            <div id="display-team-b" style="font-weight:bold; color: var(--color-b);">TEAM B</div>
+            <div id="display-team-b" style="font-weight:bold; color: var(--color-b);">Team B</div>
             <div id="games-b" class="points-big">0</div>
             <div id="partial-b">TEIL: 0</div>
         </div>
     </div>
 
     <div class="input-area">
-        <div class="input-column" id="col-a">
+        <div class="input-column">
             <button class="btn-stock stock-a" onclick="addPoints('A', 1)">1 Stock</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 2)">2 Stöcke</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 3)">3 Stöcke</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 4)">4 Stöcke</button>
         </div>
-        <div class="input-column" id="col-b">
+        <div class="input-column">
             <button class="btn-stock stock-b" onclick="addPoints('B', 1)">1 Stock</button>
             <button class="btn-stock stock-b" onclick="addPoints('B', 2)">2 Stöcke</button>
             <button class="btn-stock stock-b" onclick="addPoints('B', 3)">3 Stöcke</button>
@@ -84,16 +84,16 @@
     <div id="settings-screen">
         <h2>EINSTELLUNGEN</h2>
         <div class="color-row">
-            <label style="color: var(--color-a); font-weight: bold;">Name Team A:</label>
+            <label id="label-set-a" style="font-weight: bold;">Name Team A:</label>
             <input type="color" id="set-color-a">
         </div>
-        <input type="text" id="set-name-a" placeholder="Name eingeben...">
+        <input type="text" id="set-name-a" placeholder="Team A">
         
         <div class="color-row">
-            <label style="color: var(--color-b); font-weight: bold;">Name Team B:</label>
+            <label id="label-set-b" style="font-weight: bold;">Name Team B:</label>
             <input type="color" id="set-color-b">
         </div>
-        <input type="text" id="set-name-b" placeholder="Name eingeben...">
+        <input type="text" id="set-name-b" placeholder="Team B">
         
         <hr style="border: 0.5px solid #333; margin: 20px 0;">
         <label>Punkte 1. Stock:</label><input type="number" id="set-p1">
@@ -107,7 +107,7 @@
 
     <div id="win-screen">
         <div style="text-align:right; padding: 10px;"><button onclick="closeWinScreen()" style="background:none; color:white; border:none; font-size:35px;">✕</button></div>
-        <h2 id="win-label" style="color:#B22222; font-size:28px; margin-top:0;">PARTIE BEENDET</h2>
+        <h2 style="color:#B22222; font-size:28px; margin-top:0;">PARTIE BEENDET</h2>
         <p id="win-type" style="color:white; font-size:22px; font-weight:bold;"></p>
         <h1 id="win-winner" style="font-size: 45px; margin: 15px 0;"></h1>
         <p id="win-loser-text" style="font-size:20px;"></p>
@@ -116,135 +116,108 @@
     </div>
 
     <script>
-    let settings = JSON.parse(localStorage.getItem('eisstock_settings_v4')) || {
-        teamA:"Team A", teamB:"Team B", 
-        p1:6, pNext:3, pWin:12, 
-        betN:0.5, betC:1.5, reset:true,
-        colorA: "#00BFFF", colorB: "#FF4500"
-    };
-    
-    let history = JSON.parse(localStorage.getItem('eisstock_history_v4')) || [{ga:0, pa:0, gb:0, pb:0}];
-    let currentIndex = history.length - 1;
+        // Speicher-Version v5 zur Sicherheit gegen alte Daten
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings_v5')) || {
+            teamA:"Team A", teamB:"Team B", 
+            p1:6, pNext:3, pWin:12, 
+            betN:0.5, betC:1.5, reset:true,
+            colorA: "#00BFFF", colorB: "#FF4500"
+        };
+        
+        let history = JSON.parse(localStorage.getItem('eisstock_history_v5')) || [{ga:0, pa:0, gb:0, pb:0}];
+        let currentIndex = history.length - 1;
 
-    function applyColors() {
-        document.documentElement.style.setProperty('--color-a', settings.colorA);
-        document.documentElement.style.setProperty('--color-b', settings.colorB);
-        if(document.getElementById('label-set-a')) {
-            document.getElementById('label-set-a').style.color = settings.colorA;
-            document.getElementById('label-set-b').style.color = settings.colorB;
+        function applyColors() {
+            document.documentElement.style.setProperty('--color-a', settings.colorA);
+            document.documentElement.style.setProperty('--color-b', settings.colorB);
+            const la = document.getElementById('label-set-a');
+            const lb = document.getElementById('label-set-b');
+            if(la && lb) {
+                la.style.color = settings.colorA;
+                lb.style.color = settings.colorB;
+            }
         }
-    }
 
-    function saveAll() {
-        if (history.length > 10) {
-            history = history.slice(history.length - 10);
-            currentIndex = history.length - 1;
+        function saveAll() {
+            // Behalte nur die letzten 10 Spielstände
+            if (history.length > 10) {
+                history = history.slice(history.length - 10);
+                currentIndex = history.length - 1;
+            }
+            localStorage.setItem('eisstock_settings_v5', JSON.stringify(settings));
+            localStorage.setItem('eisstock_history_v5', JSON.stringify(history));
+            applyColors();
         }
-        localStorage.setItem('eisstock_settings_v4', JSON.stringify(settings));
-        localStorage.setItem('eisstock_history_v4', JSON.stringify(history));
-        applyColors();
-    }
 
-    function updateUI() {
-        let cur = history[currentIndex];
-        document.getElementById('games-a').innerText = cur.ga;
-        document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
-        document.getElementById('games-b').innerText = cur.gb;
-        document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
-        document.getElementById('display-team-a').innerText = settings.teamA || "Team A";
-        document.getElementById('display-team-b').innerText = settings.teamB || "Team B";
-        
-        if (cur.ga + cur.gb >= 3) {
-            showWinner(cur);
-        } else {
-            document.getElementById('win-screen').style.display = 'none';
+        function updateUI() {
+            let cur = history[currentIndex];
+            document.getElementById('games-a').innerText = cur.ga;
+            document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
+            document.getElementById('games-b').innerText = cur.gb;
+            document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
+            document.getElementById('display-team-a').innerText = settings.teamA || "Team A";
+            document.getElementById('display-team-b').innerText = settings.teamB || "Team B";
+            
+            if (cur.ga + cur.gb >= 3) {
+                showWinner(cur);
+            } else {
+                document.getElementById('win-screen').style.display = 'none';
+            }
+            saveAll();
         }
-        saveAll();
-    }
 
-    function addPoints(team, stocks) {
-        let last = history[currentIndex];
-        if (last.ga + last.gb >= 3) return;
-        
-        let next = {...last};
-        if (team === 'A') {
-            let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-            next.pa += earned;
-            if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
-        } else {
-            let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-            next.pb += earned;
-            if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+        function addPoints(team, stocks) {
+            let last = history[currentIndex];
+            if (last.ga + last.gb >= 3) return;
+            
+            let next = {...last};
+            if (team === 'A') {
+                let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                next.pa += earned;
+                if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
+            } else {
+                let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                next.pb += earned;
+                if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+            }
+            history = history.slice(0, currentIndex + 1);
+            history.push(next);
+            currentIndex++;
+            updateUI();
         }
-        history = history.slice(0, currentIndex + 1);
-        history.push(next);
-        currentIndex++;
-        updateUI();
-    }
 
-    function undo() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
-    function redo() { if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
-    function softReset() { history.push({ga:0, pa:0, gb:0, pb:0}); currentIndex = history.length - 1; updateUI(); }
+        function undo() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
+        function redo() { if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
+        
+        function softReset() { 
+            history.push({ga:0, pa:0, gb:0, pb:0}); 
+            currentIndex = history.length - 1; 
+            updateUI(); 
+        }
 
-    // KORRIGIERTE FUNKTION
-    function showWinner(cur) {
-        const winA = cur.ga > cur.gb;
-        const winnerName = winA ? (settings.teamA || "Team A") : (settings.teamB || "Team B");
-        const loserName = winA ? (settings.teamB || "Team B") : (settings.teamA || "Team A");
-        const winnerColor = winA ? settings.colorA : settings.colorB;
-        const loserColor = winA ? settings.colorB : settings.colorA;
-        
-        // Zeigt immer (Stand A : Stand B)
-        const scoreText = `(${cur.ga}:${cur.gb})`;
-        const isDreifach = (cur.ga === 0 || cur.gb === 0);
-        
-        document.getElementById('win-type').innerText = (isDreifach ? "DREIFACH-SIEG " : "EINFACH-SIEG ") + scoreText;
-        
-        let winnerEl = document.getElementById('win-winner');
-        winnerEl.innerText = winnerName + " GEWINNT!";
-        winnerEl.style.color = winnerColor;
-        
-        let loserEl = document.getElementById('win-loser-text');
-        loserEl.innerHTML = `<span style="color: ${loserColor}">${loserName}</span> zahlt:`;
-        
-        document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
-        document.getElementById('win-screen').style.display = 'block';
-    }
-
-    function openSettings() {
-        document.getElementById('set-name-a').value = settings.teamA;
-        document.getElementById('set-name-b').value = settings.teamB;
-        document.getElementById('set-color-a').value = settings.colorA;
-        document.getElementById('set-color-b').value = settings.colorB;
-        document.getElementById('set-p1').value = settings.p1;
-        document.getElementById('set-pNext').value = settings.pNext;
-        document.getElementById('set-pWin').value = settings.pWin;
-        document.getElementById('set-betN').value = settings.betN;
-        document.getElementById('set-betC').value = settings.betC;
-        document.getElementById('set-reset').checked = settings.reset;
-        document.getElementById('settings-screen').style.display = 'block';
-    }
-
-    function saveSettings() {
-        settings.teamA = document.getElementById('set-name-a').value;
-        settings.teamB = document.getElementById('set-name-b').value;
-        settings.colorA = document.getElementById('set-color-a').value;
-        settings.colorB = document.getElementById('set-color-b').value;
-        settings.p1 = parseInt(document.getElementById('set-p1').value);
-        settings.pNext = parseInt(document.getElementById('set-pNext').value);
-        settings.pWin = parseInt(document.getElementById('set-pWin').value);
-        settings.betN = parseFloat(document.getElementById('set-betN').value);
-        settings.betC = parseFloat(document.getElementById('set-betC').value);
-        settings.reset = document.getElementById('set-reset').checked;
-        document.getElementById('settings-screen').style.display = 'none';
-        updateUI();
-    }
-
-    function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
-    
-    applyColors();
-    updateUI();
-</script>
+        function showWinner(cur) {
+            const winA = cur.ga > cur.gb;
+            const winnerName = winA ? (settings.teamA || "Team A") : (settings.teamB || "Team B");
+            const loserName = winA ? (settings.teamB || "Team B") : (settings.teamA || "Team A");
+            const winnerColor = winA ? settings.colorA : settings.colorB;
+            const loserColor = winA ? settings.colorB : settings.colorA;
+            
+            // WICHTIG: Stand (A : B) anzeigen
+            const scoreText = `(${cur.ga}:${cur.gb})`;
+            const isDreifach = (cur.ga === 0 || cur.gb === 0);
+            
+            document.getElementById('win-type').innerText = (isDreifach ? "DREIFACH-SIEG " : "EINFACH-SIEG ") + scoreText;
+            
+            let winnerEl = document.getElementById('win-winner');
+            winnerEl.innerText = winnerName + " GEWINNT!";
+            winnerEl.style.color = winnerColor;
+            
+            let loserEl = document.getElementById('win-loser-text');
+            loserEl.innerHTML = `<span style="color: ${loserColor}">${loserName}</span> zahlt:`;
+            
+            document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
+            document.getElementById('win-screen').style.display = 'block';
+        }
 
         function openSettings() {
             document.getElementById('set-name-a').value = settings.teamA;
@@ -258,6 +231,7 @@
             document.getElementById('set-betC').value = settings.betC;
             document.getElementById('set-reset').checked = settings.reset;
             document.getElementById('settings-screen').style.display = 'block';
+            applyColors();
         }
 
         function saveSettings() {
@@ -282,4 +256,3 @@
     </script>
 </body>
 </html>
-
