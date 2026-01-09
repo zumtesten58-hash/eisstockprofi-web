@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eisstock Profi Live</title>
+    <title>Eisstock Profi Deluxe</title>
     <style>
         :root { --color-a: #00BFFF; --color-b: #FF4500; --bg: #000; }
-        body { background-color: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; touch-action: manipulation; }
+        body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; }
         
         .header { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #111; border-bottom: 2px solid #333; }
         .btn-top { background: #222; border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
         
         .scoreboard { display: flex; gap: 10px; padding: 15px; height: 190px; }
-        .team-card { flex: 1; border: 4px solid; border-radius: 25px; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .team-card { flex: 1; border: 4px solid; border-radius: 25px; background: linear-gradient(145deg, #0f0f0f, #1a1a1a); display: flex; flex-direction: column; justify-content: center; align-items: center; transition: border-color 0.3s; }
         .big-score { font-size: 90px; font-weight: 900; line-height: 1; margin: 5px 0; }
-        .small-points { font-size: 14px; font-weight: 800; text-transform: uppercase; }
+        .small-points { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
         .controls { display: flex; gap: 15px; padding: 0 15px 10px; }
         .btn-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
@@ -22,21 +22,23 @@
         .btn-stock:active { transform: translateY(4px); box-shadow: none; }
         
         .nav-footer { display: flex; justify-content: center; gap: 15px; padding: 15px; }
-        .btn-nav { background: #eee; color: #000; border: none; padding: 15px; border-radius: 10px; font-weight: 900; flex: 1; font-size: 14px; }
+        .btn-nav { background: #eee; color: #000; border: none; padding: 15px; border-radius: 10px; font-weight: 900; flex: 1; font-size: 14px; cursor: pointer; }
+        .btn-nav:disabled { opacity: 0.3; }
 
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; overflow-y: auto; }
         .tab-bar { display: flex; background: #111; border-bottom: 2px solid #333; position: sticky; top: 0; }
-        .tab { flex: 1; padding: 15px; text-align: center; color: #555; font-weight: bold; }
+        .tab { flex: 1; padding: 15px; text-align: center; color: #555; font-weight: bold; cursor: pointer; }
         .tab.active { color: var(--color-a); border-bottom: 4px solid var(--color-a); }
-        .s-body { padding: 20px; }
+        .s-body { padding: 20px; padding-bottom: 80px; }
         .s-row { margin-bottom: 15px; }
-        .s-label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
+        .s-label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .s-input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         
         .btn-save { background: #28a745; color: white; border: none; padding: 18px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
-        .btn-back-main { background: #333; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 15px; }
+        .btn-back-main { background: #333; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 10px; cursor: pointer; }
 
         .member-item { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 12px; margin-bottom: 8px; border-radius: 10px; border: 1px solid #222; }
+
         .win-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; background: #0a0a0a; border: 5px solid red; border-radius: 30px; padding: 30px; text-align: center; z-index: 2000; }
         .win-overlay-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1999; }
     </style>
@@ -53,12 +55,12 @@
     </div>
 
     <div class="scoreboard">
-        <div class="team-card" id="card-a">
+        <div class="team-card" id="card-a" style="border-color: var(--color-a);">
             <div id="disp-na" class="small-points">TEAM A</div>
             <div id="val-ga" class="big-score">0</div>
             <div id="val-pa" class="small-points">PUNKTE: 0</div>
         </div>
-        <div class="team-card" id="card-b">
+        <div class="team-card" id="card-b" style="border-color: var(--color-b);">
             <div id="disp-nb" class="small-points">TEAM B</div>
             <div id="val-gb" class="big-score">0</div>
             <div id="val-pb" class="small-points">PUNKTE: 0</div>
@@ -88,9 +90,9 @@
     <div id="win-overlay-bg" class="win-overlay-bg"></div>
     <div id="win-modal" class="win-modal">
         <h2 id="win-label" style="color:red; margin:0; font-size:28px;">SIEG!</h2>
-        <div id="win-score-display" style="font-size:60px; font-weight:900; margin:15px 0; color:white;">2 : 1</div>
+        <div id="win-score-display" style="font-size:60px; font-weight:900; margin:15px 0; color:white;">0 : 0</div>
         <p id="win-payment-text" style="font-size:20px; color:#00ff00; font-weight:bold; margin-bottom:25px;"></p>
-        <button class="btn-save" onclick="closeWinAndReset()">NÄCHSTE KEHRE</button>
+        <button class="btn-save" onclick="closeWinAndReset()">NEUES SPIEL</button>
     </div>
 
     <div id="settings" class="overlay">
@@ -100,12 +102,23 @@
         </div>
         
         <div id="s1" class="s-body">
-            <div class="s-row"><label class="s-label">Team Namen</label>
-                <div style="display:flex; gap:10px;"><input id="set-na" class="s-input"><input id="set-nb" class="s-input"></div>
+            <div class="s-row"><label class="s-label">Team A / Farbe</label>
+                <div style="display:flex; gap:10px;"><input id="set-na" class="s-input"><input type="color" id="set-ca" style="width:60px; height:45px;"></div>
+            </div>
+            <div class="s-row"><label class="s-label">Team B / Farbe</label>
+                <div style="display:flex; gap:10px;"><input id="set-nb" class="s-input"><input type="color" id="set-cb" style="width:60px; height:45px;"></div>
             </div>
             <div style="display:flex; gap:10px;">
                 <div class="s-row" style="flex:1;"><label class="s-label">1. Stock</label><input type="number" id="set-p1" class="s-input"></div>
-                <div class="s-row" style="flex:1;"><label class="s-label">Folge Stock</label><input type="number" id="set-pn" class="s-input"></div>
+                <div class="s-row" style="flex:1;"><label class="s-label">Folgestock</label><input type="number" id="set-pn" class="s-input"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="s-row" style="flex:1;"><label class="s-label">Ziel-Pkt</label><input type="number" id="set-pw" class="s-input"></div>
+                <div class="s-row" style="flex:1;"><label class="s-label">Preis €</label><input type="number" id="set-pe" class="s-input" step="0.10"></div>
+            </div>
+            <div class="s-row" style="background:#111; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="set-reset" style="transform:scale(1.5);">
+                <label class="s-label" style="margin:0;">Gegner bei Sieg auf 0 setzen</label>
             </div>
             <button class="btn-save" onclick="saveSettings()">SPEICHERN & ZURÜCK</button>
             <button class="btn-back-main" onclick="closeSettings()">NUR ZURÜCK</button>
@@ -115,22 +128,19 @@
             <div id="online-setup">
                 <label class="s-label">Dein Name</label>
                 <input id="user-name" class="s-input" placeholder="Name..." style="margin-bottom:20px;">
-                <button class="btn-nav" style="width:100%; background:var(--color-a); color:white; margin-bottom:15px;" onclick="hostGame()">NEUEN RAUM ERÖFFNEN</button>
+                <button class="btn-nav" style="width:100%; background:var(--color-a); color:white; margin-bottom:15px;" onclick="hostGame()">RAUM ERÖFFNEN</button>
                 <div style="display:flex; gap:10px;">
                     <input id="join-code" class="s-input" placeholder="CODE" style="text-transform:uppercase; flex:1;">
                     <button class="btn-nav" style="flex:1; background:#28a745; color:white;" onclick="joinGame()">BEITRETEN</button>
                 </div>
-                <button class="btn-back-main" onclick="closeSettings()">ZURÜCK ZUM SPIEL</button>
+                <button class="btn-back-main" onclick="closeSettings()">ZURÜCK</button>
             </div>
-
             <div id="online-active" style="display:none;">
-                <div style="text-align:center; margin-bottom:20px;">
-                    <h1 id="room-code-display" style="font-size:50px; color:#00ff00; margin:0;">-----</h1>
-                </div>
-                <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin-bottom:20px;">WhatsApp Einladung</button>
+                <h1 id="room-code-display" style="font-size:50px; color:#00ff00; text-align:center; margin:0;">-----</h1>
+                <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin:20px 0;">WhatsApp Einladung</button>
                 <label class="s-label">MITGLIEDER (ALLE HABEN SCHREIBRECHTE)</label>
-                <div id="member-list" style="margin-bottom:20px;"></div>
-                <button class="btn-save" onclick="closeSettings()">ZURÜCK ZUM SPIEL</button>
+                <div id="member-list"></div>
+                <button class="btn-save" onclick="closeSettings()" style="margin-top:20px;">ZURÜCK ZUM SPIEL</button>
                 <button class="btn-back-main" style="background:#d9534f;" onclick="leaveRoom()">RAUM VERLASSEN</button>
             </div>
         </div>
@@ -153,17 +163,29 @@
         localStorage.setItem('es_uid', myId);
 
         window.addStock = (team, count) => {
+            if(navigator.vibrate) navigator.vibrate(100);
             let n = JSON.parse(history[hIdx]);
+            
             if(team === 'A') {
-                let p = (n.pa === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
+                let p = (n.pa === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
                 n.pa += p;
-                if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.reset) n.pb = 0; }
+                if(n.pa >= config.pw) { 
+                    n.ga++; n.pa = 0; 
+                    if(config.reset) n.pb = 0; // GEGNER AUF NULL SETZEN
+                }
             } else {
-                let p = (n.pb === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
+                let p = (n.pb === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
                 n.pb += p;
-                if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.reset) n.pa = 0; }
+                if(n.pb >= config.pw) { 
+                    n.gb++; n.pb = 0; 
+                    if(config.reset) n.pa = 0; // GEGNER AUF NULL SETZEN
+                }
             }
-            if(n.ga >= 3 || n.gb >= 3) triggerWin(n);
+            
+            // SIEG LOGIK: Wenn Gesamt-Kehren = 3 oder ein Team 3 Kehren hat
+            if(n.ga + n.gb >= 3 || n.ga === 3 || n.gb === 3) {
+                triggerWin(n);
+            }
             pushState(n);
         };
 
@@ -185,6 +207,8 @@
         };
 
         function triggerWin(n) {
+            const winner = n.ga > n.gb ? config.na : config.nb;
+            document.getElementById('win-label').innerText = winner + " GEWINNT!";
             document.getElementById('win-score-display').innerText = `${n.ga} : ${n.gb}`;
             document.getElementById('win-payment-text').innerText = `Verlierer zahlt ${config.pe.toFixed(2)} €`;
             document.getElementById('win-overlay-bg').style.display = 'block';
@@ -212,8 +236,12 @@
             document.getElementById('val-pb').innerText = "PUNKTE: " + state.pb;
             document.getElementById('disp-na').innerText = config.na;
             document.getElementById('disp-nb').innerText = config.nb;
+            document.getElementById('card-a').style.borderColor = config.ca;
+            document.getElementById('card-b').style.borderColor = config.cb;
             document.getElementById('disp-na').style.color = config.ca;
             document.getElementById('disp-nb').style.color = config.cb;
+            document.documentElement.style.setProperty('--color-a', config.ca);
+            document.documentElement.style.setProperty('--color-b', config.cb);
             document.getElementById('undo').disabled = (hIdx <= 0);
             document.getElementById('redo').disabled = (hIdx >= history.length - 1);
         }
@@ -221,16 +249,26 @@
         window.openSettings = () => {
             document.getElementById('set-na').value = config.na;
             document.getElementById('set-nb').value = config.nb;
+            document.getElementById('set-ca').value = config.ca;
+            document.getElementById('set-cb').value = config.cb;
             document.getElementById('set-p1').value = config.p1;
             document.getElementById('set-pn').value = config.pn;
+            document.getElementById('set-pw').value = config.pw;
+            document.getElementById('set-pe').value = config.pe;
+            document.getElementById('set-reset').checked = config.reset;
             document.getElementById('settings').style.display = 'block';
         };
 
         window.saveSettings = () => {
             config.na = document.getElementById('set-na').value;
             config.nb = document.getElementById('set-nb').value;
+            config.ca = document.getElementById('set-ca').value;
+            config.cb = document.getElementById('set-cb').value;
             config.p1 = parseInt(document.getElementById('set-p1').value);
             config.pn = parseInt(document.getElementById('set-pn').value);
+            config.pw = parseInt(document.getElementById('set-pw').value);
+            config.pe = parseFloat(document.getElementById('set-pe').value);
+            config.reset = document.getElementById('set-reset').checked;
             localStorage.setItem('es_final_v1', JSON.stringify(config));
             if(room) update(ref(db, 'rooms/' + room), { settings: config });
             closeSettings();
@@ -246,7 +284,10 @@
             set(ref(db, 'rooms/' + newRoom), { 
                 state, settings: config, members: { [myId]: { name, role: 'player' } } 
             }).then(() => {
-                enterRoom(newRoom, name);
+                room = newRoom;
+                localStorage.setItem('es_current_room', room);
+                localStorage.setItem('es_user_name', name);
+                initSession();
             });
         };
 
@@ -255,16 +296,12 @@
             const c = document.getElementById('join-code').value.toUpperCase();
             if(!name || !c) return alert("Daten fehlen");
             update(ref(db, `rooms/${c}/members/${myId}`), { name, role: 'player' }).then(() => {
-                enterRoom(c, name);
+                room = c;
+                localStorage.setItem('es_current_room', room);
+                localStorage.setItem('es_user_name', name);
+                initSession();
             });
         };
-
-        function enterRoom(roomId, userName) {
-            room = roomId;
-            localStorage.setItem('es_current_room', room);
-            localStorage.setItem('es_user_name', userName);
-            initSession();
-        }
 
         function initSession() {
             if(!room) return;
@@ -272,7 +309,6 @@
             document.getElementById('online-active').style.display = 'block';
             document.getElementById('room-code-display').innerText = room;
             document.getElementById('room-info').innerText = "ONLINE: " + room;
-            
             onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
                 if(!data) { leaveRoom(); return; }
@@ -296,7 +332,6 @@
 
         window.leaveRoom = () => {
             if(room) remove(ref(db, `rooms/${room}/members/${myId}`));
-            room = null;
             localStorage.removeItem('es_current_room');
             location.reload();
         };
@@ -312,10 +347,8 @@
             document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab';
         };
 
-        // Auto-Re-Join beim Start
-        const savedName = localStorage.getItem('es_user_name');
-        if(room && savedName) {
-            document.getElementById('user-name').value = savedName;
+        if(room && localStorage.getItem('es_user_name')) {
+            document.getElementById('user-name').value = localStorage.getItem('es_user_name');
             initSession();
         }
         render();
