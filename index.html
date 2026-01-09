@@ -16,28 +16,23 @@
         :root { --color-a: #00BFFF; --color-b: #FF4500; --bg: #000; }
         body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
         
-        /* Header */
         .header { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #111; border-bottom: 2px solid #333; }
         .btn-top { background: #222; border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
         
-        /* Scoreboard */
         .scoreboard { display: flex; gap: 10px; padding: 15px; height: 190px; }
         .team-card { flex: 1; border: 4px solid; border-radius: 25px; background: linear-gradient(145deg, #0f0f0f, #1a1a1a); display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; transition: border-color 0.3s; }
         .big-score { font-size: 90px; font-weight: 900; line-height: 1; margin: 5px 0; }
         .small-points { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Controls */
         .controls { display: flex; gap: 15px; padding: 0 15px 10px; }
         .btn-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
         .btn-stock { padding: 22px; border: none; border-radius: 15px; color: white; font-weight: 900; font-size: 18px; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.5); position: relative; }
         .btn-stock:active { transform: translateY(4px); box-shadow: none; }
         
-        /* Footer */
         .nav-footer { display: flex; justify-content: center; gap: 15px; padding: 15px; }
         .btn-nav { background: #eee; color: #000; border: none; padding: 15px; border-radius: 10px; font-weight: 900; flex: 1; font-size: 14px; cursor: pointer; }
         .btn-nav:disabled { opacity: 0.3; }
 
-        /* Overlays */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; overflow-y: auto; }
         .tab-bar { display: flex; background: #111; border-bottom: 2px solid #333; position: sticky; top: 0; z-index: 10; }
         .tab { flex: 1; padding: 15px; text-align: center; color: #555; font-weight: bold; cursor: pointer; }
@@ -49,20 +44,17 @@
         .s-input.error { border-color: red; }
         .s-check { display: flex; align-items: center; gap: 10px; margin: 20px 0; background: #111; padding: 15px; border-radius: 10px; }
         
-        /* Buttons Settings */
         .btn-action-row { display: flex; gap: 10px; margin-top: 30px; }
         .btn-save { background: #28a745; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; flex: 2; cursor: pointer; }
         .btn-cancel { background: #333; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; cursor: pointer; }
         .btn-reset { background: #d9534f; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; cursor: pointer; }
 
-        /* Online Member List */
         .member-item { display: flex; align-items: center; justify-content: space-between; background: #111; padding: 10px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #222; }
         .mem-name { font-weight: bold; font-size: 14px; }
         .mem-ctrl { display: flex; gap: 5px; }
         .role-sel { background: #222; color: white; border: 1px solid #444; border-radius: 4px; padding: 5px; font-size: 12px; }
         .kick-btn { background: #d9534f; color: white; border: none; border-radius: 4px; padding: 5px 10px; font-weight: bold; cursor: pointer; }
 
-        /* Win Modal */
         .win-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; background: #0a0a0a; border: 5px solid red; border-radius: 30px; padding: 30px; text-align: center; z-index: 2000; box-shadow: 0 0 100px rgba(255,0,0,0.5); }
         .win-overlay-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1999; }
     </style>
@@ -195,58 +187,39 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U", authDomain: "eisstock-live.firebaseapp.com", projectId: "eisstock-live", databaseURL: "https://eisstock-live-default-rtdb.europe-west1.firebasedatabase.app" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // DEFAULT CONFIG
         const defaultConfig = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pd:1.50, reset:true, defaultRole:'viewer' };
         let config = JSON.parse(localStorage.getItem('es_final_v1')) || {...defaultConfig};
         let state = { ga:0, pa:0, gb:0, pb:0 };
         let history = [JSON.stringify(state)];
         let hIdx = 0;
 
-        // ONLINE
         let room = null;
         let myRole = 'admin'; 
         let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
         localStorage.setItem('es_uid', myId);
 
-        // Stärkere Vibration
         const haptic = () => { if(navigator.vibrate) navigator.vibrate(200); };
 
-        // --- GAME LOGIC ---
         window.addStock = (team, count) => {
             if(myRole === 'viewer') return;
             haptic();
             let n = JSON.parse(history[hIdx]);
-            
-            // Logik: Punkte addieren, bei Sieg Gegner optional resetten.
             if(team === 'A') {
                 let p = (n.pa === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
                 n.pa += p;
-                
-                if(n.pa >= config.pw) { 
-                    n.ga++; 
-                    n.pa = 0; 
-                    if(config.reset) n.pb = 0; // RESET NUR BEI SIEG
-                }
+                if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.reset) n.pb = 0; }
             } else {
                 let p = (n.pb === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
                 n.pb += p;
-                
-                if(n.pb >= config.pw) { 
-                    n.gb++; 
-                    n.pb = 0; 
-                    if(config.reset) n.pa = 0; // RESET NUR BEI SIEG
-                }
+                if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.reset) n.pa = 0; }
             }
-
-            if((n.ga + n.gb >= 3) || n.ga === 3 || n.gb === 3) {
-                triggerWin(n);
-            }
+            if((n.ga + n.gb >= 3) || n.ga === 3 || n.gb === 3) { triggerWin(n); }
             pushHistory(n);
         };
 
@@ -279,19 +252,16 @@
             render();
         };
 
-        // --- WIN LOGIC ---
         function triggerWin(n) {
             const winA = n.ga > n.gb;
             const is30 = (n.ga === 3 || n.gb === 3) && (n.ga === 0 || n.gb === 0);
             const winner = winA ? config.na : config.nb;
             const loser = winA ? config.nb : config.na;
             const preis = is30 ? config.pd : config.pe;
-
             document.getElementById('win-label').innerText = is30 ? "DREIFACHSIEG" : "EINFACHSIEG";
             document.getElementById('win-score-display').innerText = `${n.ga} : ${n.gb}`;
             document.getElementById('win-result-text').innerText = `${winner} hat gewonnen!`;
             document.getElementById('win-payment-text').innerText = `${loser} zahlt ${preis.toFixed(2).replace('.',',')} €`;
-            
             document.getElementById('win-overlay-bg').style.display = 'block';
             document.getElementById('win-modal').style.display = 'block';
         }
@@ -306,7 +276,6 @@
              document.getElementById('win-modal').style.display = 'none';
         };
 
-        // --- RENDER ---
         function render() {
             document.getElementById('val-ga').innerText = state.ga;
             document.getElementById('val-gb').innerText = state.gb;
@@ -322,7 +291,6 @@
             document.getElementById('redo').disabled = (hIdx >= history.length - 1);
         }
 
-        // --- SETTINGS ---
         window.openSettings = () => {
             document.getElementById('set-na').value = config.na;
             document.getElementById('set-nb').value = config.nb;
@@ -352,7 +320,6 @@
             config.pd = parseFloat(document.getElementById('set-pd').value);
             config.reset = document.getElementById('set-reset').checked;
             config.defaultRole = document.getElementById('default-role-sel').value;
-            
             localStorage.setItem('es_final_v1', JSON.stringify(config));
             if(room && myRole === 'admin') update(ref(db, 'rooms/' + room), { settings: config });
             closeSettings();
@@ -371,7 +338,6 @@
             document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab';
         };
 
-        // --- ONLINE LOGIC & ADMIN SUCCESSION ---
         function syncToCloud() {
             if(room && myRole === 'admin') {
                 update(ref(db, 'rooms/' + room), { state, settings: config });
@@ -381,12 +347,10 @@
         window.hostGame = () => {
             const name = document.getElementById('user-name').value;
             if(!name) { document.getElementById('user-name').classList.add('error'); return; }
-            document.getElementById('user-name').classList.remove('error');
-
             room = Math.random().toString(36).substr(2, 5).toUpperCase();
             myRole = 'admin';
-            config.defaultRole = document.getElementById('default-role-sel').value;
-
+            const memberRef = ref(db, `rooms/${room}/members/${myId}`);
+            onDisconnect(memberRef).remove();
             set(ref(db, 'rooms/' + room), { 
                 state, 
                 settings: config, 
@@ -398,18 +362,17 @@
         window.joinGame = () => {
             const name = document.getElementById('user-name').value;
             if(!name) { document.getElementById('user-name').classList.add('error'); return; }
-            document.getElementById('user-name').classList.remove('error');
-
             const c = document.getElementById('join-code').value.toUpperCase();
             if(!c) return;
-
             onValue(ref(db, 'rooms/' + c), (snap) => {
                 if(snap.exists()) {
                     room = c;
                     const data = snap.val();
-                    const joinRole = data.settings && data.settings.defaultRole ? data.settings.defaultRole : 'viewer';
+                    const joinRole = data.settings?.defaultRole || 'viewer';
                     myRole = joinRole; 
-                    update(ref(db, `rooms/${room}/members/${myId}`), { name, role: joinRole });
+                    const memberRef = ref(db, `rooms/${room}/members/${myId}`);
+                    onDisconnect(memberRef).remove();
+                    update(memberRef, { name, role: joinRole });
                     initLiveSession();
                 } else { alert("Raum nicht gefunden!"); }
             }, { onlyOnce: true });
@@ -423,34 +386,24 @@
             
             onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
-                if(data) {
-                    state = data.state;
-                    if(myRole !== 'admin' && data.settings) {
-                        config = data.settings;
+                if(!data) return;
+                state = data.state;
+                if(myRole !== 'admin' && data.settings) config = data.settings;
+                
+                if(data.members) {
+                    if(!data.members[myId]) { leaveRoom(); return; }
+                    myRole = data.members[myId].role;
+                    const memKeys = Object.keys(data.members).sort();
+                    const hasAdmin = memKeys.some(k => data.members[k].role === 'admin');
+                    if(!hasAdmin && memKeys.length > 0) {
+                         if(memKeys[0] === myId) {
+                             update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' });
+                             myRole = 'admin';
+                         }
                     }
-                    
-                    // ADMIN SUCCESSION LOGIC
-                    if(data.members) {
-                        if(data.members[myId]) {
-                            myRole = data.members[myId].role;
-                        } else if(myRole !== 'admin') {
-                             leaveRoom(); return;
-                        }
-
-                        // Check if Admin exists, otherwise promote first member
-                        const memKeys = Object.keys(data.members).sort();
-                        const hasAdmin = memKeys.some(k => data.members[k].role === 'admin');
-                        if(!hasAdmin && memKeys.length > 0) {
-                             if(memKeys[0] === myId) {
-                                 update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' });
-                                 myRole = 'admin';
-                             }
-                        }
-                    }
-
-                    render();
-                    renderMemberList(data.members || {});
                 }
+                render();
+                renderMemberList(data.members || {});
             });
         }
 
@@ -461,38 +414,25 @@
                 const m = members[uid];
                 const div = document.createElement('div');
                 div.className = 'member-item';
-                
-                let controls = "";
-                if(myRole === 'admin' && uid !== myId) {
-                    controls = `
-                        <div class="mem-ctrl">
-                            <select onchange="changeRole('${uid}', this.value)" class="role-sel">
-                                <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
-                                <option value="player" ${m.role==='player'?'selected':''}>Spieler</option>
-                                <option value="viewer" ${m.role==='viewer'?'selected':''}>Zuschauer</option>
-                            </select>
-                            <button class="kick-btn" onclick="kickUser('${uid}')">🗑️</button>
-                        </div>
-                    `;
-                } else {
-                    controls = `<span style="font-size:12px; color:#888;">${m.role.toUpperCase()}</span>`;
-                }
-
+                let controls = (myRole === 'admin' && uid !== myId) ? `
+                    <div class="mem-ctrl">
+                        <select onchange="changeRole('${uid}', this.value)" class="role-sel">
+                            <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
+                            <option value="player" ${m.role==='player'?'selected':''}>Spieler</option>
+                            <option value="viewer" ${m.role==='viewer'?'selected':''}>Zuschauer</option>
+                        </select>
+                        <button class="kick-btn" onclick="kickUser('${uid}')">🗑️</button>
+                    </div>` : `<span style="font-size:12px; color:#888;">${m.role.toUpperCase()}</span>`;
                 div.innerHTML = `<span class="mem-name">${m.name} ${uid===myId?'(Du)':''}</span>${controls}`;
                 list.appendChild(div);
             });
         }
 
-        window.changeRole = (uid, newRole) => {
-            update(ref(db, `rooms/${room}/members/${uid}`), { role: newRole });
-        };
-        window.kickUser = (uid) => {
-            if(confirm("Entfernen?")) remove(ref(db, `rooms/${room}/members/${uid}`));
-        };
+        window.changeRole = (uid, newRole) => { update(ref(db, `rooms/${room}/members/${uid}`), { role: newRole }); };
+        window.kickUser = (uid) => { if(confirm("Entfernen?")) remove(ref(db, `rooms/${room}/members/${uid}`)); };
 
         window.leaveRoom = () => {
-            room = null;
-            myRole = 'admin';
+            room = null; myRole = 'admin';
             document.getElementById('online-setup').style.display = 'block';
             document.getElementById('online-active').style.display = 'none';
             document.getElementById('room-info').innerText = "LOKAL";
@@ -508,12 +448,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('join')) {
             document.getElementById('join-code').value = urlParams.get('join');
-            openSettings();
-            setTab(2);
+            openSettings(); setTab(2);
         }
-
         render();
-        window.changeRole = changeRole; window.kickUser = kickUser;
     </script>
 </body>
 </html>
