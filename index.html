@@ -37,7 +37,7 @@
 </head>
 <body>
     <div class="header">
-        <button class="btn-reset" onclick="hardReset()">↺ RESET</button>
+        <button class="btn-reset" onclick="softReset()">↺ RESET</button>
         <button class="btn-settings" onclick="openSettings()">⚙️</button>
     </div>
     <div class="scoreboard">
@@ -91,16 +91,20 @@
         <h1 id="win-winner" style="color:green; font-size: 45px; margin: 15px 0;"></h1>
         <p id="win-loser-text" style="font-size:20px;"></p>
         <div class="win-price" id="win-price-display"></div>
-        <button class="btn-finish" onclick="hardReset()">NÄCHSTE PARTIE STARTEN</button>
+        <button class="btn-finish" onclick="softReset()">NÄCHSTE PARTIE STARTEN</button>
     </div>
 
     <script>
-        // LADE SPEICHER ODER NUTZE STANDARD (Reset jetzt standardmäßig true)
         let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
         let history = JSON.parse(localStorage.getItem('eisstock_history')) || [{ga:0, pa:0, gb:0, pb:0}];
         let currentIndex = JSON.parse(localStorage.getItem('eisstock_index')) || 0;
 
         function saveAll() {
+            // BEGRENZUNG: Max 10 Einträge behalten
+            if (history.length > 10) {
+                history = history.slice(history.length - 10);
+                currentIndex = history.length - 1;
+            }
             localStorage.setItem('eisstock_settings', JSON.stringify(settings));
             localStorage.setItem('eisstock_history', JSON.stringify(history));
             localStorage.setItem('eisstock_index', JSON.stringify(currentIndex));
@@ -125,6 +129,13 @@
             saveAll();
         }
 
+        function addToHistory(nextState) {
+            history = history.slice(0, currentIndex + 1);
+            history.push(nextState);
+            currentIndex++;
+            updateUI();
+        }
+
         function addPoints(team, stocks) {
             vibrate();
             let last = history[currentIndex];
@@ -133,36 +144,24 @@
                 if (team === 'A') {
                     let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                     next.pa += earned;
-                    if (next.pa >= settings.pWin) { 
-                        next.ga++; 
-                        next.pa = 0; 
-                        if(settings.reset) next.pb = 0; 
-                    }
+                    if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
                 } else {
                     let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                     next.pb += earned;
-                    if (next.pb >= settings.pWin) { 
-                        next.gb++; 
-                        next.pb = 0; 
-                        if(settings.reset) next.pa = 0; 
-                    }
+                    if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
                 }
-                history = history.slice(0, currentIndex + 1);
-                history.push(next);
-                currentIndex++;
-                updateUI();
+                addToHistory(next);
             }
         }
 
         function undo() { vibrate(); if (currentIndex > 0) { currentIndex--; updateUI(); } }
         function redo() { vibrate(); if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
         
-        function hardReset() {
+        function softReset() {
             vibrate();
-            history = [{ga:0, pa:0, gb:0, pb:0}];
-            currentIndex = 0;
+            let next = {ga:0, pa:0, gb:0, pb:0};
+            addToHistory(next);
             document.getElementById('win-screen').style.display = 'none';
-            updateUI();
         }
 
         function showWinner(cur) {
