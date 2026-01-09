@@ -204,6 +204,19 @@
         let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
         localStorage.setItem('es_uid', myId);
 
+        // --- WAKE LOCK (DISPLAY ANHALTEN) ---
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {}
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+        });
+
         const haptic = () => { if(navigator.vibrate) navigator.vibrate(200); };
 
         window.addStock = (team, count) => {
@@ -379,6 +392,7 @@
         };
 
         function initLiveSession() {
+            requestWakeLock(); // Start Wake Lock
             document.getElementById('online-setup').style.display = 'none';
             document.getElementById('online-active').style.display = 'block';
             document.getElementById('room-code-display').innerText = room;
@@ -391,14 +405,18 @@
                 if(myRole !== 'admin' && data.settings) config = data.settings;
                 
                 if(data.members) {
+                    // Falls ich gelöscht wurde (z.B. Kick), zurück zu Lokal
                     if(!data.members[myId]) { leaveRoom(); return; }
+                    
                     myRole = data.members[myId].role;
                     const memKeys = Object.keys(data.members).sort();
                     const hasAdmin = memKeys.some(k => data.members[k].role === 'admin');
+                    
+                    // SCHNELLE ADMIN NACHFOLGE
                     if(!hasAdmin && memKeys.length > 0) {
                          if(memKeys[0] === myId) {
-                             update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' });
                              myRole = 'admin';
+                             update(ref(db, `rooms/${room}/members/${myId}`), { role: 'admin' }).then(() => syncToCloud());
                          }
                     }
                 }
@@ -442,7 +460,7 @@
 
         window.shareWhatsApp = () => {
             const url = window.location.href.split('?')[0] + "?join=" + room;
-            window.open(`https://wa.me/?text=${encodeURIComponent("Eisstock Profi: " + url)}`);
+            window.open(`https://wa.me/?text=${encodeURIComponent("Eisstock Profi beitreten: " + url)}`);
         };
 
         const urlParams = new URLSearchParams(window.location.search);
