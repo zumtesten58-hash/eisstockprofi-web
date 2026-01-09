@@ -4,127 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
-    <title>Eisstockprofi Live</title>
-    
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-
+    <title>Eisstockprofi Web</title>
     <style>
         :root { --color-a: #00BFFF; --color-b: #FF4500; }
-        body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; user-select: none; -webkit-user-select: none; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
-        .btn-reset { background: #B22222; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
-        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 10px; background: #333; }
-        .live-active { background: #228B22; color: white; animation: blink 2s infinite; }
-        @keyframes blink { 50% { opacity: 0.6; } }
-
-        .scoreboard { display: flex; justify-content: space-around; margin-top: 15px; }
-        .score-card { border: 3px solid; border-radius: 12px; width: 45%; padding: 10px; background: #1A1A1A; }
-        #card-a { border-color: var(--color-a); }
-        #card-b { border-color: var(--color-b); }
-        .points-big { font-size: 60px; font-weight: 900; margin: 5px 0; }
+        body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 0; user-select: none; }
         
-        .input-area { display: flex; justify-content: space-around; margin-top: 20px; }
-        .input-column { display: flex; flex-direction: column; width: 45%; }
-        .btn-stock { margin: 5px; padding: 15px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
+        /* Header & Scoreboard */
+        .header { padding: 10px; font-weight: bold; border-bottom: 1px solid #333; }
+        .scoreboard { display: flex; justify-content: space-around; margin-top: 15px; }
+        .score-card { border: 1px solid #444; width: 45%; padding: 10px; }
+        .points-big { font-size: 70px; font-weight: 900; }
+        
+        /* Buttons */
+        .btn-stock { width: 90%; margin: 5px; padding: 20px; border: none; border-radius: 5px; color: white; font-weight: bold; font-size: 18px; }
         .stock-a { background: var(--color-a); }
         .stock-b { background: var(--color-b); }
-        .btn-stock:disabled { opacity: 0.2; }
         
-        .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
-        .btn-nav { background: #E0E0E0; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 48%; }
+        /* EINSTELLUNGEN UI (Original Look) */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; overflow-y: auto; padding-bottom: 50px; }
+        .settings-header { font-weight: bold; padding: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #111; }
+        .label-text { font-size: 12px; color: #00BFFF; font-weight: bold; text-align: left; flex: 1; }
+        .setting-input { background: #111; color: white; border: 1px solid #333; padding: 8px; width: 150px; text-align: center; }
+        
+        /* Die Farbrechtecke */
+        .color-picker-wrapper { width: 40px; height: 25px; border: 2px solid white; cursor: pointer; position: relative; }
+        .color-picker-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; }
 
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 8px; box-sizing: border-box; }
-        
-        .btn-primary { background: #00BFFF; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; }
-        .btn-secondary { background: #333; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px; }
-        
-        .role-selector { display: flex; gap: 5px; margin-bottom: 20px; }
-        .role-btn { flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
-        .role-active { background: #00BFFF; border-color: white; }
+        .btn-save { background: #228B22; color: white; width: 95%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+        .btn-back { background: #444; color: white; width: 95%; padding: 10px; border: none; border-radius: 5px; margin-top: 10px; }
+        .btn-factory { background: #333; color: #777; width: 95%; padding: 8px; border: none; border-radius: 5px; margin-top: 20px; font-size: 10px; }
+
+        /* Online Sektion */
+        .online-box { border: 1px solid #00BFFF; margin: 20px 10px; padding: 15px; border-radius: 5px; }
+        .role-badge { font-size: 10px; padding: 2px 5px; background: #00BFFF; border-radius: 3px; margin-left: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <button class="btn-reset" onclick="handleReset()" id="reset-btn">↺ RESET</button>
-        <div id="live-indicator" class="status-badge">LOKALER MODUS</div>
-        <button style="background:none; border:none; font-size:24px; color:white;" onclick="openSettings()">⚙️</button>
-    </div>
+    <div class="header" onclick="openSettings()">EINSTELLUNGEN ⚙️</div>
 
     <div class="scoreboard">
-        <div class="score-card" id="card-a">
-            <div id="display-team-a" style="font-weight:bold; color: var(--color-a);">Team A</div>
-            <div id="games-a" class="points-big">0</div>
-            <div id="partial-a">TEIL: 0</div>
+        <div class="score-card" style="border-color: var(--color-a)">
+            <div id="disp-name-a" style="color: var(--color-a)">Team A</div>
+            <div id="ga" class="points-big">0</div>
+            <div id="pa">TEIL: 0</div>
         </div>
-        <div class="score-card" id="card-b">
-            <div id="display-team-b" style="font-weight:bold; color: var(--color-b);">Team B</div>
-            <div id="games-b" class="points-big">0</div>
-            <div id="partial-b">TEIL: 0</div>
-        </div>
-    </div>
-
-    <div class="input-area">
-        <div class="input-column">
-            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 1)">1 Stock</button>
-            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 4)">4 Stöcke</button>
-        </div>
-        <div class="input-column">
-            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 1)">1 Stock</button>
-            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 4)">4 Stöcke</button>
+        <div class="score-card" style="border-color: var(--color-b)">
+            <div id="disp-name-b" style="color: var(--color-b)">Team B</div>
+            <div id="gb" class="points-big">0</div>
+            <div id="pb">TEIL: 0</div>
         </div>
     </div>
 
-    <div class="nav-buttons">
-        <button class="btn-nav action-btn" onclick="undo()">← KORREKTUR</button>
-        <button class="btn-nav action-btn" onclick="redo()">VORWÄRTS →</button>
+    <div style="margin-top: 30px;">
+        <button class="btn-stock stock-a" onclick="addP('A')">TEAM A +</button>
+        <button class="btn-stock stock-b" onclick="addP('B')">TEAM B +</button>
+        <button onclick="undo()" style="margin-top:20px; background:#222; color:white; border:none; padding:10px 30px; border-radius:5px;">← KORREKTUR</button>
     </div>
 
     <div id="settings-screen" class="overlay">
-        <h2>LIVE-EINSTELLUNGEN</h2>
-        <div id="live-setup">
-            <label>Raum-Code (leer lassen für Auto-Code):</label>
-            <input type="text" id="room-code" placeholder="Z.B. STOCK1">
-            <label>Deine Rolle:</label>
-            <div class="role-selector">
-                <button class="role-btn role-active" id="btn-admin" onclick="updateRole('admin')">ADMIN</button>
-                <button class="role-btn" id="btn-write" onclick="updateRole('write')">SCHREIBER</button>
-                <button class="role-btn" id="btn-read" onclick="updateRole('read')">ZUSCHAUER</button>
-            </div>
-            <button class="btn-primary" onclick="initLiveMode()">LIVE-MODUS STARTEN</button>
-        </div>
-        
-        <div id="live-info" style="display:none; margin-top:10px;">
-            <p>Verbunden mit Raum: <b id="room-id-display"></b></p>
-            <button class="btn-secondary" onclick="location.reload()">Raum verlassen / Trennen</button>
+        <div class="settings-header">EINSTELLUNGEN</div>
+
+        <div class="setting-row">
+            <span class="label-text" style="color:#00BFFF">Name Team A:</span>
+            <input type="text" id="in-name-a" class="setting-input">
+            <div class="color-picker-wrapper" id="rect-a"><input type="color" id="in-col-a"></div>
         </div>
 
-        <hr style="margin:20px 0; border:0.5px solid #333;">
-        
-        <div id="admin-settings">
-            <label>Team Namen:</label>
-            <input type="text" id="set-name-a" placeholder="Team A">
-            <input type="text" id="set-name-b" placeholder="Team B">
-            <label>Farbe A & B:</label>
-            <div style="display:flex; gap:10px;">
-                <input type="color" id="set-color-a">
-                <input type="color" id="set-color-b">
-            </div>
+        <div class="setting-row">
+            <span class="label-text" style="color:#FF4500">Name Team B:</span>
+            <input type="text" id="in-name-b" class="setting-input">
+            <div class="color-picker-wrapper" id="rect-b"><input type="color" id="in-col-b"></div>
         </div>
 
-        <button class="btn-primary" style="margin-top:20px;" onclick="saveLocalSettings()">SPEICHERN & SCHLIESSEN</button>
+        <div class="setting-row"><span class="label-text">Punkte 1. Stock:</span><input type="number" id="in-p1" class="setting-input"></div>
+        <div class="setting-row"><span class="label-text">Punkte weitere:</span><input type="number" id="in-pn" class="setting-input"></div>
+        <div class="setting-row"><span class="label-text">Moar-Sieg bei:</span><input type="number" id="in-win" class="setting-input"></div>
+        <div class="setting-row"><span class="label-text">Einfach-Sieg Preis (€):</span><input type="number" id="in-en" step="0.1" class="setting-input"></div>
+        <div class="setting-row"><span class="label-text">Dreifach-Sieg Preis (€):</span><input type="number" id="in-dr" step="0.1" class="setting-input"></div>
+        
+        <div class="setting-row" style="justify-content: center; gap: 10px;">
+            <input type="checkbox" id="in-reset-opp">
+            <span style="font-size: 11px;">Gegner bei Sieg auf 0 setzen</span>
+        </div>
+
+        <div class="online-box">
+            <div style="color:#00BFFF; font-weight:bold; margin-bottom:10px;">ONLINE-MODUS</div>
+            
+            <div id="host-section">
+                <button onclick="hostGroup()" style="background:#444; color:white; border:none; padding:8px; width:100%; border-radius:5px;">Gruppe hosten</button>
+                <div id="host-controls" style="display:none; margin-top:10px; font-size:12px;">
+                    Code: <b id="host-code-display" style="font-size:18px; color:lime;"></b><br>
+                    Rolle für Gäste: 
+                    <select id="guest-role-select" onchange="updateGuestRole()">
+                        <option value="read">Nur Zuschauer</option>
+                        <option value="write">Schreiber (darf Punkte geben)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="join-section" style="margin-top:15px; border-top:1px solid #222; padding-top:10px;">
+                <input type="text" id="join-code-input" placeholder="Code eingeben" style="width:60%; padding:5px;">
+                <button onclick="joinGroup()" style="padding:5px 10px;">Beitreten</button>
+            </div>
+            
+            <div id="online-status" style="margin-top:10px; font-size:10px; color:#777;">Status: Lokal</div>
+        </div>
+
+        <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
+        <button class="btn-back" onclick="closeSettings()">ZURÜCK</button>
+        <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Deine Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U",
             authDomain: "eisstock-live.firebaseapp.com",
@@ -138,98 +136,127 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let settings = { teamA: "Team A", teamB: "Team B", colorA: "#00BFFF", colorB: "#FF4500", p1: 6, pNext: 3, pWin: 12, betN: 0.5, betC: 1.5 };
-        let history = [{ga:0, pa:0, gb:0, pb:0}];
-        let currentIndex = 0;
+        let s = { nameA:"Team A", nameB:"Team B", colA:"#00BFFF", colB:"#FF4500", p1:6, pn:3, win:12, en:0.5, dr:1.5, resetOpp:true };
+        let state = { ga:0, pa:0, gb:0, pb:0 };
         let currentRoom = null;
-        let myRole = 'admin';
+        let myRole = 'admin'; // 'admin' (Host), 'write', 'read'
 
-        window.updateRole = (r) => {
-            myRole = r;
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('role-active'));
-            document.getElementById('btn-' + r).classList.add('role-active');
+        // --- LOKALE LOGIK ---
+        window.addP = (team) => {
+            if(myRole === 'read') return;
+            let earned = (team === 'A' ? state.pa : state.pb) === 0 ? s.p1 : s.pn;
+            if(team === 'A') state.pa += earned; else state.pb += earned;
+            
+            if(state.pa >= s.win) { state.ga++; state.pa=0; if(s.resetOpp) state.pb=0; }
+            if(state.pb >= s.win) { state.gb++; state.pb=0; if(s.resetOpp) state.pa=0; }
+            sync(); updateUI();
         };
 
-        window.initLiveMode = () => {
-            let code = document.getElementById('room-code').value.trim().toUpperCase();
-            if(!code) code = "ST-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+        window.openSettings = () => {
+            document.getElementById('in-name-a').value = s.nameA;
+            document.getElementById('in-name-b').value = s.nameB;
+            document.getElementById('in-col-a').value = s.colA;
+            document.getElementById('in-col-b').value = s.colB;
+            document.getElementById('in-p1').value = s.p1;
+            document.getElementById('in-pn').value = s.pn;
+            document.getElementById('in-win').value = s.win;
+            document.getElementById('in-en').value = s.en;
+            document.getElementById('in-dr').value = s.dr;
+            document.getElementById('in-reset-opp').checked = s.resetOpp;
+            document.getElementById('settings-screen').style.display = 'block';
+        };
+
+        window.saveSettings = () => {
+            if(myRole !== 'admin') { alert("Nur der Host darf Einstellungen ändern!"); return; }
+            s.nameA = document.getElementById('in-name-a').value;
+            s.nameB = document.getElementById('in-name-b').value;
+            s.colA = document.getElementById('in-col-a').value;
+            s.colB = document.getElementById('in-col-b').value;
+            s.p1 = parseInt(document.getElementById('in-p1').value);
+            s.pn = parseInt(document.getElementById('in-pn').value);
+            s.win = parseInt(document.getElementById('in-win').value);
+            s.en = parseFloat(document.getElementById('in-en').value);
+            s.dr = parseFloat(document.getElementById('in-dr').value);
+            s.resetOpp = document.getElementById('in-reset-opp').checked;
+            sync(); closeSettings(); updateUI();
+        };
+
+        window.closeSettings = () => document.getElementById('settings-screen').style.display = 'none';
+
+        // --- ONLINE LOGIK ---
+        window.hostGroup = () => {
+            const code = "ST-" + Math.random().toString(36).substring(2, 6).toUpperCase();
             currentRoom = code;
+            myRole = 'admin';
             
-            onValue(ref(db, 'rooms/' + currentRoom), (snapshot) => {
-                const data = snapshot.val();
-                if(data) {
-                    settings = data.settings;
-                    history = data.history;
-                    currentIndex = data.currentIndex;
-                    updateUI();
-                } else if(myRole === 'admin') {
-                    pushData();
-                }
+            // Raum in Firebase erstellen
+            set(ref(db, 'rooms/' + code), {
+                settings: s,
+                state: state,
+                allowedRole: document.getElementById('guest-role-select').value
             });
 
-            document.getElementById('live-setup').style.display = 'none';
-            document.getElementById('live-info').style.display = 'block';
-            document.getElementById('room-id-display').innerText = currentRoom;
-            document.getElementById('live-indicator').innerText = "LIVE: " + currentRoom;
-            document.getElementById('live-indicator').classList.add('live-active');
+            document.getElementById('host-controls').style.display = 'block';
+            document.getElementById('host-code-display').innerText = code;
+            document.getElementById('online-status').innerText = "Status: HOSTING (" + code + ")";
+            listenToRoom();
         };
 
-        function pushData() {
+        window.joinGroup = () => {
+            const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+            if(!code) return;
+            currentRoom = code;
+
+            onValue(ref(db, 'rooms/' + code), (snap) => {
+                const data = snap.val();
+                if(data) {
+                    myRole = data.allowedRole; // Rolle wird vom Host vorgegeben!
+                    s = data.settings;
+                    state = data.state;
+                    document.getElementById('online-status').innerText = "Status: VERBUNDEN (" + (myRole === 'read' ? 'Zuschauer' : 'Schreiber') + ")";
+                    updateUI();
+                } else {
+                    alert("Raum nicht gefunden!");
+                }
+            }, { onlyOnce: true });
+            listenToRoom();
+        };
+
+        function listenToRoom() {
+            onValue(ref(db, 'rooms/' + currentRoom), (snap) => {
+                const data = snap.val();
+                if(data) {
+                    state = data.state;
+                    s = data.settings;
+                    updateUI();
+                }
+            });
+        }
+
+        window.updateGuestRole = () => {
+            if(currentRoom && myRole === 'admin') {
+                update(ref(db, 'rooms/' + currentRoom), { allowedRole: document.getElementById('guest-role-select').value });
+            }
+        };
+
+        function sync() {
             if(currentRoom && myRole !== 'read') {
-                set(ref(db, 'rooms/' + currentRoom), { settings, history, currentIndex });
+                update(ref(db, 'rooms/' + currentRoom), { state: state, settings: s });
             }
         }
 
-        window.addPoints = (team, stocks) => {
-            if(myRole === 'read') return;
-            let last = history[currentIndex];
-            let next = {...last};
-            let earned = (team === 'A' ? next.pa : next.pb) === 0 ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-            
-            if(team === 'A') {
-                next.pa += earned;
-                if(next.pa >= settings.pWin) { next.ga++; next.pa = 0; next.pb = 0; }
-            } else {
-                next.pb += earned;
-                if(next.pb >= settings.pWin) { next.gb++; next.pa = 0; next.pb = 0; }
-            }
-            history = history.slice(0, currentIndex + 1);
-            history.push(next);
-            currentIndex++;
-            pushData();
-            updateUI();
-        };
-
-        window.updateUI = () => {
-            const cur = history[currentIndex];
-            document.getElementById('games-a').innerText = cur.ga;
-            document.getElementById('games-b').innerText = cur.gb;
-            document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
-            document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
-            document.getElementById('display-team-a').innerText = settings.teamA;
-            document.getElementById('display-team-b').innerText = settings.teamB;
-            document.documentElement.style.setProperty('--color-a', settings.colorA);
-            document.documentElement.style.setProperty('--color-b', settings.colorB);
-            
-            const isRead = myRole === 'read';
-            document.querySelectorAll('.action-btn').forEach(b => b.disabled = isRead);
-            document.getElementById('reset-btn').style.display = isRead ? 'none' : 'block';
-        };
-
-        window.openSettings = () => document.getElementById('settings-screen').style.display = 'block';
-        window.saveLocalSettings = () => {
-            if(myRole === 'admin') {
-                settings.teamA = document.getElementById('set-name-a').value || settings.teamA;
-                settings.teamB = document.getElementById('set-name-b').value || settings.teamB;
-                settings.colorA = document.getElementById('set-color-a').value;
-                settings.colorB = document.getElementById('set-color-b').value;
-                pushData();
-            }
-            document.getElementById('settings-screen').style.display = 'none';
-            updateUI();
-        };
-        window.handleReset = () => { history = [{ga:0, pa:0, gb:0, pb:0}]; currentIndex = 0; pushData(); updateUI(); };
-        window.undo = () => { if(currentIndex > 0) { currentIndex--; pushData(); updateUI(); } };
+        function updateUI() {
+            document.getElementById('ga').innerText = state.ga;
+            document.getElementById('gb').innerText = state.gb;
+            document.getElementById('pa').innerText = "TEIL: " + state.pa;
+            document.getElementById('pb').innerText = "TEIL: " + state.pb;
+            document.getElementById('disp-name-a').innerText = s.nameA;
+            document.getElementById('disp-name-b').innerText = s.nameB;
+            document.getElementById('rect-a').style.backgroundColor = s.colA;
+            document.getElementById('rect-b').style.backgroundColor = s.colB;
+            document.documentElement.style.setProperty('--color-a', s.colA);
+            document.documentElement.style.setProperty('--color-b', s.colB);
+        }
 
         updateUI();
     </script>
