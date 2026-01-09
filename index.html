@@ -3,390 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="robots" content="noindex, nofollow">
     <title>Eisstockprofi Pro</title>
     <style>
-        :root { --color-a: #00BFFF; --color-b: #FF4500; }
-        body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        :root { --color-a: #00BFFF; --color-b: #FF4500; --bg: #0a0a0a; --panel: #161616; }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', -apple-system, sans-serif; margin: 0; overflow: hidden; user-select: none; }
         
-        /* Scoreboard Layout */
-        .header { padding: 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .scoreboard { display: flex; justify-content: space-around; padding: 10px; margin-top: 10px; }
-        .score-card { border: 2px solid; width: 46%; padding: 15px 5px; border-radius: 10px; background: #0a0a0a; }
-        #card-a { border-color: var(--color-a); }
-        #card-b { border-color: var(--color-b); }
-        .game-count { font-size: 80px; font-weight: 900; line-height: 1; margin: 10px 0; }
-        .partial-text { font-size: 14px; opacity: 0.8; }
+        /* Professional Header */
+        .header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #000; border-bottom: 1px solid #222; }
+        .btn-top { background: #222; border: 1px solid #444; color: #eee; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+        .header-title { text-align: center; flex-grow: 1; }
+        .header-title h1 { font-size: 14px; margin: 0; letter-spacing: 2px; color: #fff; }
+        .header-title span { font-size: 10px; color: var(--color-a); font-weight: bold; text-transform: uppercase; }
 
-        /* Stock Buttons */
-        .input-grid { display: flex; justify-content: space-around; padding: 10px; margin-top: 20px; }
-        .input-col { width: 46%; display: flex; flex-direction: column; gap: 10px; }
-        .btn-stock { padding: 18px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: opacity 0.1s; }
-        .btn-stock:active { opacity: 0.5; }
-        .stock-a { background: var(--color-a); }
-        .stock-b { background: var(--color-b); }
+        /* Scoreboard */
+        .main-container { display: flex; flex-direction: column; height: calc(100vh - 60px); }
+        .scoreboard { display: flex; padding: 10px; gap: 10px; flex: 1; align-items: stretch; }
+        .team-box { flex: 1; border: 2px solid; border-radius: 12px; background: var(--panel); display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.3s; }
+        .name-display { font-size: 14px; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; }
+        .score-display { font-size: 80px; font-weight: 900; line-height: 1; margin: 5px 0; }
+        .points-display { font-size: 14px; font-weight: 600; opacity: 0.8; }
 
-        /* Navigation & Control */
-        .control-bar { display: flex; justify-content: center; gap: 10px; margin-top: 25px; padding: 0 10px; }
-        .btn-nav { background: #222; color: white; border: 1px solid #444; padding: 12px 20px; border-radius: 5px; flex: 1; font-size: 12px; }
+        /* Input Area */
+        .controls { padding: 15px; display: flex; gap: 10px; }
+        .btn-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .btn-p { padding: 15px; border: none; border-radius: 8px; color: white; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        .btn-p:active { transform: translateY(2px); box-shadow: none; }
+        .btn-small { padding: 10px; font-size: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
 
-        /* Settings Overlay */
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; overflow-y: auto; text-align: left; }
-        .settings-tab-bar { display: flex; border-bottom: 1px solid #333; }
-        .tab-btn { flex: 1; padding: 15px; background: #111; color: #777; border: none; font-weight: bold; }
-        .tab-btn.active { background: black; color: #00BFFF; border-bottom: 2px solid #00BFFF; }
+        /* Footer Nav */
+        .footer-nav { padding: 15px; display: flex; justify-content: center; gap: 20px; background: #000; }
+        .nav-item { background: none; border: none; color: #666; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .nav-item:active { color: #fff; }
 
-        .setting-section { padding: 20px; }
-        .setting-row { margin-bottom: 15px; }
-        .setting-row label { display: block; font-size: 11px; color: #00BFFF; font-weight: bold; margin-bottom: 5px; }
-        .setting-input { width: 100%; background: #111; color: white; border: 1px solid #333; padding: 12px; border-radius: 5px; box-sizing: border-box; }
+        /* Modals & Overlays */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; backdrop-filter: blur(5px); }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: #1c1c1c; border-radius: 16px; padding: 25px; border: 1px solid #333; text-align: center; }
+        .modal h2 { margin-top: 0; font-size: 18px; letter-spacing: 1px; }
         
-        .color-row { display: flex; align-items: center; justify-content: space-between; }
-        .color-box { width: 50px; height: 30px; border: 2px solid white; border-radius: 4px; position: relative; }
-        .color-box input { opacity: 0; position: absolute; width: 100%; height: 100%; }
+        /* Settings Styles */
+        .settings-content { height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .s-row { margin-bottom: 20px; text-align: left; }
+        .s-label { font-size: 10px; font-weight: bold; color: #666; margin-bottom: 5px; display: block; }
+        .s-input { width: 100%; background: #222; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 15px; background: #28a745; border: none; color: white; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        .btn-factory { background: transparent; color: #ff4444; border: 1px solid #ff4444; margin-top: 30px; font-size: 10px; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; opacity: 0.6; }
 
-        /* Online Member List */
-        .member-item { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; }
-        .role-select { background: #222; color: white; border: 1px solid #444; padding: 4px; font-size: 11px; }
-
-        /* Footer Buttons */
-        .footer-btns { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .btn-save { background: #228B22; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
-        .btn-factory { background: #440000; color: #ffaaaa; padding: 10px; border: none; border-radius: 5px; font-size: 11px; margin-top: 30px; opacity: 0.8; }
-
-        /* Modals */
-        .win-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid #00BFFF; padding: 30px; z-index: 2000; width: 80%; border-radius: 15px; }
+        .live-tag { color: #00ff00 !important; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <span id="room-badge" style="font-size: 10px; color: #777;">LOKAL</span>
-        <span>EISSTOCKPROFI PRO</span>
-        <button style="background:none; border:none; font-size:20px; color:white;" onclick="openSettings()">⚙️</button>
+        <button class="btn-top" onclick="confirmReset()">Neues Spiel</button>
+        <div class="header-title">
+            <h1>EISSTOCKPROFI PRO</h1>
+            <span id="room-status">LOKAL</span>
+        </div>
+        <button class="btn-top" onclick="openSettings()">⚙️</button>
     </div>
 
-    <div class="scoreboard">
-        <div class="score-card" id="card-a">
-            <div id="disp-name-a" style="color: var(--color-a); font-weight: bold;">Team A</div>
-            <div id="ga" class="game-count">0</div>
-            <div id="pa" class="partial-text">PUNKTE: 0</div>
+    <div class="main-container">
+        <div class="scoreboard">
+            <div class="team-box" id="box-a" style="border-color: var(--color-a);">
+                <div id="disp-na" class="name-display" style="color: var(--color-a);">Team A</div>
+                <div id="val-ga" class="score-display">0</div>
+                <div id="val-pa" class="points-display">PUNKTE: 0</div>
+            </div>
+            <div class="team-box" id="box-b" style="border-color: var(--color-b);">
+                <div id="disp-nb" class="name-display" style="color: var(--color-b);">Team B</div>
+                <div id="val-gb" class="score-display">0</div>
+                <div id="val-pb" class="points-display">PUNKTE: 0</div>
+            </div>
         </div>
-        <div class="score-card" id="card-b">
-            <div id="disp-name-b" style="color: var(--color-b); font-weight: bold;">Team B</div>
-            <div id="gb" class="game-count">0</div>
-            <div id="pb" class="partial-text">PUNKTE: 0</div>
+
+        <div class="controls">
+            <div class="btn-group">
+                <button class="btn-p" style="background:var(--color-a)" onclick="addP('A', 6)">6 PKT (1. Stock)</button>
+                <button class="btn-p" style="background:var(--color-a); opacity:0.8;" onclick="addP('A', 3)">+3 PKT</button>
+                <button class="btn-p btn-small" onclick="addP('A', 1)">+1 PKT Feinjustierung</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-p" style="background:var(--color-b)" onclick="addP('B', 6)">6 PKT (1. Stock)</button>
+                <button class="btn-p" style="background:var(--color-b); opacity:0.8;" onclick="addP('B', 3)">+3 PKT</button>
+                <button class="btn-p btn-small" onclick="addP('B', 1)">+1 PKT Feinjustierung</button>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <button class="nav-item" onclick="historyStep(-1)">← KORREKTUR</button>
+            <button class="nav-item" onclick="historyStep(1)">VORWÄRTS →</button>
         </div>
     </div>
 
-    <div class="input-grid">
-        <div class="input-col">
-            <button class="btn-stock stock-a" onclick="addP('A', 1)">1 Stock</button>
-            <button class="btn-stock stock-a" onclick="addP('A', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-a" onclick="addP('A', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-a" onclick="addP('A', 4)">4 Stöcke</button>
-        </div>
-        <div class="input-col">
-            <button class="btn-stock stock-b" onclick="addP('B', 1)">1 Stock</button>
-            <button class="btn-stock stock-b" onclick="addP('B', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-b" onclick="addP('B', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-b" onclick="addP('B', 4)">4 Stöcke</button>
+    <div id="modal-overlay" class="overlay">
+        <div class="modal" id="modal-box">
+            <h2 id="m-title">Titel</h2>
+            <p id="m-body" style="color:#aaa; font-size:14px;"></p>
+            <div id="m-footer" style="display:flex; gap:10px; margin-top:20px;"></div>
         </div>
     </div>
 
-    <div class="control-bar">
-        <button class="btn-nav" onclick="undo()">← KORREKTUR</button>
-        <button class="btn-nav" onclick="redo()">VORWÄRTS →</button>
-        <button class="btn-nav" style="background:#441111" onclick="resetGame()">NEUES SPIEL</button>
-    </div>
-
-    <div id="win-modal" class="win-modal">
-        <h2 id="win-title" style="margin-top:0">SIEG!</h2>
-        <div id="win-detail" style="font-size: 20px; margin: 20px 0; color: #00BFFF;"></div>
-        <div id="win-money" style="font-size: 14px; margin-bottom: 20px;"></div>
-        <button class="btn-save" style="width:100%" onclick="closeWinModal()">NÄCHSTE MOAR</button>
-    </div>
-
-    <div id="settings-screen" class="overlay">
-        <div class="settings-tab-bar">
-            <button class="tab-btn active" id="tab-gen" onclick="switchTab('gen')">ALLGEMEIN</button>
-            <button class="tab-btn" id="tab-online" onclick="switchTab('online')">ONLINE-MODUS</button>
-        </div>
-
-        <div id="section-gen" class="setting-section">
-            <div class="setting-row color-row">
-                <div style="width:70%"><label>NAME TEAM A:</label><input type="text" id="in-name-a" class="setting-input"></div>
-                <div class="color-box" id="rect-a"><input type="color" id="in-col-a"></div>
-            </div>
-            <div class="setting-row color-row">
-                <div style="width:70%"><label>NAME TEAM B:</label><input type="text" id="in-name-b" class="setting-input"></div>
-                <div class="color-box" id="rect-b"><input type="color" id="in-col-b"></div>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <div class="setting-row" style="flex:1"><label>1. STOCK:</label><input type="number" id="in-p1" class="setting-input"></div>
-                <div class="setting-row" style="flex:1"><label>WEITERE:</label><input type="number" id="in-pn" class="setting-input"></div>
-            </div>
-            <div class="setting-row"><label>SIEG BEI PUNKTE:</label><input type="number" id="in-win" class="setting-input"></div>
-            <div style="display:flex; gap:10px;">
-                <div class="setting-row" style="flex:1"><label>EINFACH (€):</label><input type="number" id="in-en" step="0.1" class="setting-input"></div>
-                <div class="setting-row" style="flex:1"><label>DREIFACH (€):</label><input type="number" id="in-dr" step="0.1" class="setting-input"></div>
-            </div>
-            <div class="setting-row" style="display:flex; align-items:center; gap:10px;">
-                <input type="checkbox" id="in-reset-opp"> <span style="font-size:12px">Gegner bei Sieg auf 0 setzen</span>
-            </div>
-        </div>
-
-        <div id="section-online" class="setting-section" style="display:none">
-            <div id="online-off">
-                <input type="text" id="user-name" class="setting-input" placeholder="Dein Name" style="margin-bottom:10px;">
-                <button class="btn-save" style="width:100%; background:#444;" onclick="hostGroup()">GRUPPE HOSTEN</button>
-                <div style="margin:20px 0; text-align:center; color:#555;">— ODER —</div>
-                <input type="text" id="join-code" class="setting-input" placeholder="Code eingeben" style="text-align:center;">
-                <button class="btn-save" style="width:100%; background:#00BFFF; margin-top:10px;" onclick="joinGroup()">BEITRETEN</button>
-            </div>
-
-            <div id="online-on" style="display:none">
-                <div style="background:#111; padding:15px; border-radius:10px; text-align:center; border:1px solid #00BFFF">
-                    <div style="font-size:10px; color:#777;">RAUM-CODE</div>
-                    <div id="display-room-code" style="font-size:32px; font-weight:bold; color:lime; letter-spacing:2px;">----</div>
-                    <button onclick="shareWhatsApp()" style="background:#25D366; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; margin-top:10px;">WhatsApp senden</button>
+    <div id="settings-overlay" class="overlay" style="background: #000;">
+        <div class="settings-content">
+            <h2 style="text-align:center; letter-spacing:2px;">EINSTELLUNGEN</h2>
+            
+            <div class="s-row">
+                <label class="s-label">TEAM A NAME & FARBE</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="in-na" class="s-input" oninput="livePreview()">
+                    <input type="color" id="in-ca" oninput="livePreview()" style="width:60px; height:45px; border:none; background:none;">
                 </div>
+            </div>
 
-                <div id="admin-controls" style="margin-top:20px; display:none;">
-                    <label>MITGLIEDER & ROLLEN:</label>
-                    <div id="member-list"></div>
-                    <div style="margin-top:10px;"><label>STANDARDROLLE FÜR NEUE:</label>
-                        <select id="def-role" onchange="updateDefRole()" class="setting-input" style="padding:5px;">
-                            <option value="read">Zuschauer</option>
-                            <option value="write">Schreiber</option>
-                        </select>
+            <div class="s-row">
+                <label class="s-label">TEAM B NAME & FARBE</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="in-nb" class="s-input" oninput="livePreview()">
+                    <input type="color" id="in-cb" oninput="livePreview()" style="width:60px; height:45px; border:none; background:none;">
+                </div>
+            </div>
+
+            <div class="s-row">
+                <label class="s-label">SIEG BEI PUNKTZAHL</label>
+                <input type="number" id="in-win" class="s-input" oninput="livePreview()">
+            </div>
+
+            <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
+
+            <div id="online-view">
+                <label class="s-label">ONLINE MODUS</label>
+                <div id="online-init">
+                    <button class="btn-p" style="background:#444; width:100%; margin-bottom:10px;" onclick="hostGame()">GRUPPE HOSTEN</button>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="join-code" class="s-input" placeholder="CODE" style="flex:1">
+                        <input type="text" id="join-name" class="s-input" placeholder="DEIN NAME" style="flex:2">
                     </div>
+                    <button class="btn-save" style="background:#007bff" onclick="joinGame()">BEITRETEN</button>
                 </div>
-                <button class="btn-factory" style="width:100%;" onclick="location.reload()">VERBINDUNG TRENNEN</button>
+                <div id="online-active" style="display:none; text-align:center;">
+                    <div style="font-size:10px; color:#666;">RAUM-CODE:</div>
+                    <div id="active-code" style="font-size:32px; font-weight:900; color:var(--color-a);">----</div>
+                    <button class="btn-top" onclick="shareWA()" style="background:#25D366; border:none; margin-top:10px;">WhatsApp Einladung</button>
+                </div>
             </div>
-        </div>
 
-        <div class="footer-btns">
-            <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
-            <button class="btn-save" style="background:#444" onclick="closeSettings()">ZURÜCK</button>
-            <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
+            <div style="margin-top:40px; display:flex; flex-direction:column; gap:10px;">
+                <button class="btn-save" onclick="saveSettings()">ÄNDERUNGEN SPEICHERN</button>
+                <button class="btn-p btn-small" onclick="closeSettings()">ABBRECHEN (Zurück)</button>
+                <button class="btn-factory" onclick="factoryReset()">AUF STANDARD ZURÜCKSETZEN</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Config (von Screenshot)
         const firebaseConfig = {
             apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U",
             authDomain: "eisstock-live.firebaseapp.com",
             projectId: "eisstock-live",
-            storageBucket: "eisstock-live.firebasestorage.app",
-            messagingSenderId: "201538137304",
-            appId: "1:201538137304:web:78362c30c45c006cb63bad",
             databaseURL: "https://eisstock-live-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // State
-        let s = JSON.parse(localStorage.getItem('es_settings')) || { nameA:"Team A", nameB:"Team B", colA:"#00BFFF", colB:"#FF4500", p1:6, pn:3, win:12, en:0.5, dr:1.5, resetOpp:true, defRole:'read' };
-        let state = { ga:0, pa:0, gb:0, pb:0 };
+        // State & Local Data
+        let config = JSON.parse(localStorage.getItem('es_v3_cfg')) || { na: "Team A", nb: "Team B", ca: "#00BFFF", cb: "#FF4500", win: 12, p1: 0.5, p3: 1.5 };
+        let state = { ga: 0, pa: 0, gb: 0, pb: 0 };
         let history = [JSON.stringify(state)];
-        let histIdx = 0;
+        let hIdx = 0;
         let room = null;
-        let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substring(7);
-        localStorage.setItem('es_uid', myId);
         let myRole = 'admin';
+        let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('es_uid', myId);
 
-        // Vibration
-        const vib = () => { if(navigator.vibrate) navigator.vibrate(50); };
-
-        window.addP = (team, stocks) => {
+        // Core Functions
+        window.addP = (team, val) => {
             if(myRole === 'read') return;
-            vib();
-            let last = JSON.parse(history[histIdx]);
-            let n = {...last};
+            let n = JSON.parse(history[hIdx]);
+            if(team === 'A') { n.pa += val; n.pb = 0; } else { n.pb += val; n.pa = 0; }
             
-            let currentP = team === 'A' ? n.pa : n.pb;
-            let earned = (currentP === 0) ? s.p1 + (stocks-1)*s.pn : stocks*s.pn;
-            
-            if(team === 'A') n.pa += earned; else n.pb += earned;
+            checkWin(n);
+            pushHistory(n);
+        };
 
-            // Sieg-Check
-            if(n.pa >= s.win || n.pb >= s.win) {
-                const winner = n.pa >= s.win ? 'A' : 'B';
-                const loserP = winner === 'A' ? n.pb : n.pa;
-                const isSchneider = (loserP === 0);
+        function checkWin(n) {
+            if(n.pa >= config.win || n.pb >= config.win) {
+                const winA = n.pa >= config.win;
+                const loP = winA ? n.pb : n.pa;
+                const isSchneider = (loP === 0);
                 
-                let winType = "";
-                let winRatio = "";
-                let costText = "";
+                let title = isSchneider ? "DREIFACH-SIEG (Schneider)" : "EINFACH-SIEG";
+                let ratio = winA ? (isSchneider ? "3 : 0" : "2 : 1") : (isSchneider ? "0 : 3" : "1 : 2");
+                let loser = winA ? config.nb : config.na;
+                let price = isSchneider ? config.p3 : config.p1;
 
-                if(winner === 'A') {
-                    if(isSchneider) { n.ga += 3; winRatio = "3 : 0"; winType = "DREIFACH-SIEG (Schneider)"; costText = `${s.nameB} zahlt ${s.dr.toFixed(2)}€`; }
-                    else { n.ga += 2; n.gb += 1; winRatio = "2 : 1"; winType = "EINFACH-SIEG"; costText = `${s.nameB} zahlt ${s.en.toFixed(2)}€`; }
-                } else {
-                    if(isSchneider) { n.gb += 3; winRatio = "0 : 3"; winType = "DREIFACH-SIEG (Schneider)"; costText = `${s.nameA} zahlt ${s.dr.toFixed(2)}€`; }
-                    else { n.gb += 2; n.ga += 1; winRatio = "1 : 2"; winType = "EINFACH-SIEG"; costText = `${s.nameA} zahlt ${s.en.toFixed(2)}€`; }
-                }
+                if(winA) { n.ga += (isSchneider ? 3 : 2); if(!isSchneider) n.gb += 1; }
+                else { n.gb += (isSchneider ? 3 : 2); if(!isSchneider) n.ga += 1; }
 
-                showWin(winType, winRatio, costText);
-                n.pa = 0; n.pb = 0;
-                if(s.resetOpp) { /* schon durch pa/pb=0 erledigt */ }
+                showModal(title, `${ratio}<br><small>${loser} zahlt ${price.toFixed(2)}€</small>`, [
+                    { label: "NÄCHSTE MOAR", cmd: "nextRound()", primary: true }
+                ]);
+                state = n;
             }
-
-            history = history.slice(0, histIdx + 1);
-            history.push(JSON.stringify(n));
-            if(history.length > 11) history.shift(); else histIdx++;
-            state = n;
-            sync(); updateUI();
-        };
-
-        function showWin(type, ratio, cost) {
-            document.getElementById('win-title').innerText = type;
-            document.getElementById('win-detail').innerText = ratio;
-            document.getElementById('win-money').innerText = cost;
-            document.getElementById('win-modal').style.display = 'block';
         }
-        window.closeWinModal = () => document.getElementById('win-modal').style.display = 'none';
 
-        window.undo = () => { if(histIdx > 0 && myRole !== 'read') { histIdx--; state = JSON.parse(history[histIdx]); sync(); updateUI(); vib(); } };
-        window.redo = () => { if(histIdx < history.length - 1 && myRole !== 'read') { histIdx++; state = JSON.parse(history[histIdx]); sync(); updateUI(); vib(); } };
-        window.resetGame = () => { if(confirm("Wirklich alles auf Null setzen?") && myRole !== 'read') { state={ga:0, pa:0, gb:0, pb:0}; history=[JSON.stringify(state)]; histIdx=0; sync(); updateUI(); vib(); } };
-
-        // Settings Tabs
-        window.switchTab = (t) => {
-            document.getElementById('section-gen').style.display = t === 'gen' ? 'block' : 'none';
-            document.getElementById('section-online').style.display = t === 'online' ? 'block' : 'none';
-            document.getElementById('tab-gen').className = t === 'gen' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('tab-online').className = t === 'online' ? 'tab-btn active' : 'tab-btn';
+        window.nextRound = () => {
+            state.pa = 0; state.pb = 0;
+            pushHistory(state);
+            closeModal();
         };
 
-        window.openSettings = () => {
-            document.getElementById('in-name-a').value = s.nameA;
-            document.getElementById('in-name-b').value = s.nameB;
-            document.getElementById('in-col-a').value = s.colA;
-            document.getElementById('in-col-b').value = s.colB;
-            document.getElementById('in-p1').value = s.p1;
-            document.getElementById('in-pn').value = s.pn;
-            document.getElementById('in-win').value = s.win;
-            document.getElementById('in-en').value = s.en;
-            document.getElementById('in-dr').value = s.dr;
-            document.getElementById('in-reset-opp').checked = s.resetOpp;
-            document.getElementById('settings-screen').style.display = 'block';
+        // UI Management
+        function updateUI(data = state, cfg = config) {
+            document.getElementById('val-ga').innerText = data.ga;
+            document.getElementById('val-gb').innerText = data.gb;
+            document.getElementById('val-pa').innerText = "PUNKTE: " + data.pa;
+            document.getElementById('val-pb').innerText = "PUNKTE: " + data.pb;
+            document.getElementById('disp-na').innerText = cfg.na;
+            document.getElementById('disp-nb').innerText = cfg.nb;
+            document.documentElement.style.setProperty('--color-a', cfg.ca);
+            document.documentElement.style.setProperty('--color-b', cfg.cb);
+            document.getElementById('disp-na').style.color = cfg.ca;
+            document.getElementById('disp-nb').style.color = cfg.cb;
+        }
+
+        window.livePreview = () => {
+            const previewCfg = {
+                na: document.getElementById('in-na').value,
+                nb: document.getElementById('in-nb').value,
+                ca: document.getElementById('in-ca').value,
+                cb: document.getElementById('in-cb').value,
+                win: parseInt(document.getElementById('in-win').value)
+            };
+            updateUI(state, previewCfg);
         };
 
         window.saveSettings = () => {
-            if(myRole !== 'admin') { alert("Nur der Admin darf Einstellungen ändern!"); return; }
-            s.nameA = document.getElementById('in-name-a').value;
-            s.nameB = document.getElementById('in-name-b').value;
-            s.colA = document.getElementById('in-col-a').value;
-            s.colB = document.getElementById('in-col-b').value;
-            s.p1 = parseInt(document.getElementById('in-p1').value);
-            s.pn = parseInt(document.getElementById('in-pn').value);
-            s.win = parseInt(document.getElementById('in-win').value);
-            s.en = parseFloat(document.getElementById('in-en').value);
-            s.dr = parseFloat(document.getElementById('in-dr').value);
-            s.resetOpp = document.getElementById('in-reset-opp').checked;
-            localStorage.setItem('es_settings', JSON.stringify(s));
-            sync(); closeSettings(); updateUI();
-        };
-        window.closeSettings = () => document.getElementById('settings-screen').style.display = 'none';
-        window.factoryReset = () => { if(confirm("Alle Einstellungen zurücksetzen?")) { localStorage.clear(); location.reload(); } };
-
-        // ONLINE MODUS
-        window.hostGroup = () => {
-            const userName = document.getElementById('user-name').value || "Host";
-            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-            room = code; myRole = 'admin';
-            set(ref(db, 'rooms/' + code), { settings: s, state: state, members: { [myId]: { name: userName, role: 'admin' } }, defRole: 'read' });
-            setupOnlineUI(code);
-            listenRoom();
+            if(myRole !== 'admin') { showModal("ZUGRIFF VERWEIGERT", "Nur der Admin darf Einstellungen ändern.", [{label: "OK", cmd:"closeModal()"}]); return; }
+            config.na = document.getElementById('in-na').value;
+            config.nb = document.getElementById('in-nb').value;
+            config.ca = document.getElementById('in-ca').value;
+            config.cb = document.getElementById('in-cb').value;
+            config.win = parseInt(document.getElementById('in-win').value);
+            localStorage.setItem('es_v3_cfg', JSON.stringify(config));
+            sync();
+            closeSettings();
         };
 
-        window.joinGroup = () => {
-            const code = document.getElementById('join-code').value.trim().toUpperCase();
-            const userName = document.getElementById('user-name').value || "Gast";
-            if(!code) return;
-            room = code;
+        // Modal System
+        window.showModal = (title, body, buttons) => {
+            document.getElementById('m-title').innerText = title;
+            document.getElementById('m-body').innerHTML = body;
+            const footer = document.getElementById('m-footer');
+            footer.innerHTML = "";
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.className = "btn-p";
+                btn.style.flex = "1";
+                btn.style.fontSize = "12px";
+                btn.style.background = b.primary ? "#28a745" : "#444";
+                btn.innerText = b.label;
+                btn.onclick = () => eval(b.cmd);
+                footer.appendChild(btn);
+            });
+            document.getElementById('modal-overlay').style.display = 'block';
+        };
+        window.closeModal = () => document.getElementById('modal-overlay').style.display = 'none';
+
+        // Online Logic
+        window.hostGame = () => {
+            room = Math.random().toString(36).substr(2, 5).toUpperCase();
+            myRole = 'admin';
+            set(ref(db, 'rooms/' + room), { state, settings: config, members: { [myId]: { name: "Host", role: 'admin' } } });
+            initOnlineMode();
+        };
+
+        window.joinGame = () => {
+            const code = document.getElementById('join-code').value.toUpperCase();
+            const name = document.getElementById('join-name').value;
+            if(!code || !name) { showModal("FEHLER", "Bitte Code und Namen eingeben!", [{label:"OK", cmd:"closeModal()"}]); return; }
             onValue(ref(db, 'rooms/' + code), (snap) => {
-                const data = snap.val();
-                if(data) {
-                    if(!data.members[myId]) {
-                        update(ref(db, `rooms/${code}/members/${myId}`), { name: userName, role: data.defRole });
-                    }
-                    setupOnlineUI(code);
-                    listenRoom();
-                } else alert("Raum nicht gefunden!");
+                if(snap.exists()) {
+                    room = code;
+                    update(ref(db, `rooms/${code}/members/${myId}`), { name, role: 'read' });
+                    initOnlineMode();
+                } else showModal("NICHT GEFUNDEN", "Dieser Raum existiert nicht.", [{label:"OK", cmd:"closeModal()"}]);
             }, { onlyOnce: true });
         };
 
-        function listenRoom() {
+        function initOnlineMode() {
+            document.getElementById('online-init').style.display = 'none';
+            document.getElementById('online-active').style.display = 'block';
+            document.getElementById('active-code').innerText = room;
+            document.getElementById('room-status').innerText = "LIVE: " + room;
+            document.getElementById('room-status').classList.add('live-tag');
+            
             onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
-                if(!data) return;
-                s = data.settings;
-                state = data.state;
-                myRole = data.members[myId]?.role || 'read';
-                updateUI();
-                if(myRole === 'admin') renderMemberList(data.members);
+                if(data) {
+                    state = data.state;
+                    config = data.settings;
+                    myRole = data.members[myId]?.role || 'read';
+                    updateUI();
+                }
             });
         }
 
-        function renderMemberList(members) {
-            const list = document.getElementById('member-list');
-            list.innerHTML = "";
-            for(let id in members) {
-                if(id === myId) continue;
-                const m = members[id];
-                const div = document.createElement('div');
-                div.className = "member-item";
-                div.innerHTML = `<span>${m.name}</span>
-                    <select class="role-select" onchange="changeUserRole('${id}', this.value)">
-                        <option value="read" ${m.role==='read'?'selected':''}>Zuschauer</option>
-                        <option value="write" ${m.role==='write'?'selected':''}>Schreiber</option>
-                        <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
-                    </select>`;
-                list.appendChild(div);
-            }
+        // Helpers
+        function pushHistory(s) {
+            history = history.slice(0, hIdx + 1);
+            history.push(JSON.stringify(s));
+            hIdx++;
+            state = s;
+            sync();
+            updateUI();
         }
 
-        window.changeUserRole = (uid, role) => { update(ref(db, `rooms/${room}/members/${uid}`), { role }); };
-        window.updateDefRole = () => { update(ref(db, `rooms/${room}`), { defRole: document.getElementById('def-role').value }); };
-
-        window.shareWhatsApp = () => {
-            const text = encodeURIComponent(`Komm in meine Eisstock-Gruppe! Code: ${room}\nLink: ${window.location.href}`);
-            window.open(`https://wa.me/?text=${text}`);
+        window.historyStep = (dir) => {
+            if(myRole === 'read') return;
+            if(dir === -1 && hIdx > 0) hIdx--;
+            if(dir === 1 && hIdx < history.length - 1) hIdx++;
+            state = JSON.parse(history[hIdx]);
+            sync(); updateUI();
         };
 
-        function setupOnlineUI(code) {
-            document.getElementById('online-off').style.display = 'none';
-            document.getElementById('online-on').style.display = 'block';
-            document.getElementById('display-room-code').innerText = code;
-            document.getElementById('room-badge').innerText = "LIVE: " + code;
-            document.getElementById('room-badge').style.color = "lime";
-            if(myRole === 'admin') document.getElementById('admin-controls').style.display = 'block';
-        }
+        window.confirmReset = () => {
+            showModal("NEUES SPIEL?", "Möchtest du wirklich alle Punkte löschen?", [
+                { label: "ABBRECHEN", cmd: "closeModal()" },
+                { label: "JA, RESET", cmd: "doReset()", primary: true }
+            ]);
+        };
 
-        function sync() { if(room && myRole !== 'read') update(ref(db, 'rooms/' + room), { state, settings: s }); }
+        window.doReset = () => {
+            state = { ga: 0, pa: 0, gb: 0, pb: 0 };
+            pushHistory(state);
+            closeModal();
+        };
 
-        function updateUI() {
-            document.getElementById('ga').innerText = state.ga;
-            document.getElementById('gb').innerText = state.gb;
-            document.getElementById('pa').innerText = "PUNKTE: " + state.pa;
-            document.getElementById('pb').innerText = "PUNKTE: " + state.pb;
-            document.getElementById('disp-name-a').innerText = s.nameA;
-            document.getElementById('disp-name-b').innerText = s.nameB;
-            document.getElementById('rect-a').style.backgroundColor = s.colA;
-            document.getElementById('rect-b').style.backgroundColor = s.colB;
-            document.documentElement.style.setProperty('--color-a', s.colA);
-            document.documentElement.style.setProperty('--color-b', s.colB);
-            
-            const isRead = myRole === 'read';
-            document.querySelectorAll('.btn-stock').forEach(b => b.disabled = isRead);
+        window.openSettings = () => {
+            document.getElementById('in-na').value = config.na;
+            document.getElementById('in-nb').value = config.nb;
+            document.getElementById('in-ca').value = config.ca;
+            document.getElementById('in-cb').value = config.cb;
+            document.getElementById('in-win').value = config.win;
+            document.getElementById('settings-overlay').style.display = 'block';
+        };
+
+        window.closeSettings = () => {
+            document.getElementById('settings-overlay').style.display = 'none';
+            updateUI(); // Reset visual changes if not saved
+        };
+
+        window.sync = () => { if(room && myRole === 'admin') update(ref(db, 'rooms/' + room), { state, settings: config }); };
+        
+        window.factoryReset = () => { localStorage.clear(); location.reload(); };
+
+        window.shareWA = () => {
+            const url = window.location.href.split('?')[0] + "?join=" + room;
+            window.open(`https://wa.me/?text=${encodeURIComponent("Komm in meine Eisstock-Gruppe!\nCode: " + room + "\nLink: " + url)}`);
+        };
+
+        // URL Join Auto-Handler
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('join')) {
+            const code = urlParams.get('join');
+            setTimeout(() => {
+                document.getElementById('join-code').value = code;
+                openSettings();
+                showModal("EINLADUNG", `Möchtest du der Gruppe ${code} beitreten? Gib deinen Namen ein.`, [
+                    {label: "OK", cmd:"closeModal()"}
+                ]);
+            }, 500);
         }
 
         updateUI();
