@@ -4,125 +4,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
-    <title>Eisstockprofi Web</title>
+    <title>Eisstockprofi Pro</title>
     <style>
         :root { --color-a: #00BFFF; --color-b: #FF4500; }
-        body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 0; user-select: none; }
+        body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
         
-        /* Header & Scoreboard */
-        .header { padding: 10px; font-weight: bold; border-bottom: 1px solid #333; }
-        .scoreboard { display: flex; justify-content: space-around; margin-top: 15px; }
-        .score-card { border: 1px solid #444; width: 45%; padding: 10px; }
-        .points-big { font-size: 70px; font-weight: 900; }
-        
-        /* Buttons */
-        .btn-stock { width: 90%; margin: 5px; padding: 20px; border: none; border-radius: 5px; color: white; font-weight: bold; font-size: 18px; }
+        /* Scoreboard Layout */
+        .header { padding: 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .scoreboard { display: flex; justify-content: space-around; padding: 10px; margin-top: 10px; }
+        .score-card { border: 2px solid; width: 46%; padding: 15px 5px; border-radius: 10px; background: #0a0a0a; }
+        #card-a { border-color: var(--color-a); }
+        #card-b { border-color: var(--color-b); }
+        .game-count { font-size: 80px; font-weight: 900; line-height: 1; margin: 10px 0; }
+        .partial-text { font-size: 14px; opacity: 0.8; }
+
+        /* Stock Buttons */
+        .input-grid { display: flex; justify-content: space-around; padding: 10px; margin-top: 20px; }
+        .input-col { width: 46%; display: flex; flex-direction: column; gap: 10px; }
+        .btn-stock { padding: 18px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: opacity 0.1s; }
+        .btn-stock:active { opacity: 0.5; }
         .stock-a { background: var(--color-a); }
         .stock-b { background: var(--color-b); }
-        
-        /* EINSTELLUNGEN UI (Original Look) */
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; overflow-y: auto; padding-bottom: 50px; }
-        .settings-header { font-weight: bold; padding: 20px; border-bottom: 1px solid #333; margin-bottom: 20px; }
-        
-        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid #111; }
-        .label-text { font-size: 12px; color: #00BFFF; font-weight: bold; text-align: left; flex: 1; }
-        .setting-input { background: #111; color: white; border: 1px solid #333; padding: 8px; width: 150px; text-align: center; }
-        
-        /* Die Farbrechtecke */
-        .color-picker-wrapper { width: 40px; height: 25px; border: 2px solid white; cursor: pointer; position: relative; }
-        .color-picker-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; }
 
-        .btn-save { background: #228B22; color: white; width: 95%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
-        .btn-back { background: #444; color: white; width: 95%; padding: 10px; border: none; border-radius: 5px; margin-top: 10px; }
-        .btn-factory { background: #333; color: #777; width: 95%; padding: 8px; border: none; border-radius: 5px; margin-top: 20px; font-size: 10px; }
+        /* Navigation & Control */
+        .control-bar { display: flex; justify-content: center; gap: 10px; margin-top: 25px; padding: 0 10px; }
+        .btn-nav { background: #222; color: white; border: 1px solid #444; padding: 12px 20px; border-radius: 5px; flex: 1; font-size: 12px; }
 
-        /* Online Sektion */
-        .online-box { border: 1px solid #00BFFF; margin: 20px 10px; padding: 15px; border-radius: 5px; }
-        .role-badge { font-size: 10px; padding: 2px 5px; background: #00BFFF; border-radius: 3px; margin-left: 10px; }
+        /* Settings Overlay */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; overflow-y: auto; text-align: left; }
+        .settings-tab-bar { display: flex; border-bottom: 1px solid #333; }
+        .tab-btn { flex: 1; padding: 15px; background: #111; color: #777; border: none; font-weight: bold; }
+        .tab-btn.active { background: black; color: #00BFFF; border-bottom: 2px solid #00BFFF; }
+
+        .setting-section { padding: 20px; }
+        .setting-row { margin-bottom: 15px; }
+        .setting-row label { display: block; font-size: 11px; color: #00BFFF; font-weight: bold; margin-bottom: 5px; }
+        .setting-input { width: 100%; background: #111; color: white; border: 1px solid #333; padding: 12px; border-radius: 5px; box-sizing: border-box; }
+        
+        .color-row { display: flex; align-items: center; justify-content: space-between; }
+        .color-box { width: 50px; height: 30px; border: 2px solid white; border-radius: 4px; position: relative; }
+        .color-box input { opacity: 0; position: absolute; width: 100%; height: 100%; }
+
+        /* Online Member List */
+        .member-item { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 13px; }
+        .role-select { background: #222; color: white; border: 1px solid #444; padding: 4px; font-size: 11px; }
+
+        /* Footer Buttons */
+        .footer-btns { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .btn-save { background: #228B22; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .btn-factory { background: #440000; color: #ffaaaa; padding: 10px; border: none; border-radius: 5px; font-size: 11px; margin-top: 30px; opacity: 0.8; }
+
+        /* Modals */
+        .win-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid #00BFFF; padding: 30px; z-index: 2000; width: 80%; border-radius: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="header" onclick="openSettings()">EINSTELLUNGEN ⚙️</div>
+    <div class="header">
+        <span id="room-badge" style="font-size: 10px; color: #777;">LOKAL</span>
+        <span>EISSTOCKPROFI PRO</span>
+        <button style="background:none; border:none; font-size:20px; color:white;" onclick="openSettings()">⚙️</button>
+    </div>
 
     <div class="scoreboard">
-        <div class="score-card" style="border-color: var(--color-a)">
-            <div id="disp-name-a" style="color: var(--color-a)">Team A</div>
-            <div id="ga" class="points-big">0</div>
-            <div id="pa">TEIL: 0</div>
+        <div class="score-card" id="card-a">
+            <div id="disp-name-a" style="color: var(--color-a); font-weight: bold;">Team A</div>
+            <div id="ga" class="game-count">0</div>
+            <div id="pa" class="partial-text">PUNKTE: 0</div>
         </div>
-        <div class="score-card" style="border-color: var(--color-b)">
-            <div id="disp-name-b" style="color: var(--color-b)">Team B</div>
-            <div id="gb" class="points-big">0</div>
-            <div id="pb">TEIL: 0</div>
+        <div class="score-card" id="card-b">
+            <div id="disp-name-b" style="color: var(--color-b); font-weight: bold;">Team B</div>
+            <div id="gb" class="game-count">0</div>
+            <div id="pb" class="partial-text">PUNKTE: 0</div>
         </div>
     </div>
 
-    <div style="margin-top: 30px;">
-        <button class="btn-stock stock-a" onclick="addP('A')">TEAM A +</button>
-        <button class="btn-stock stock-b" onclick="addP('B')">TEAM B +</button>
-        <button onclick="undo()" style="margin-top:20px; background:#222; color:white; border:none; padding:10px 30px; border-radius:5px;">← KORREKTUR</button>
+    <div class="input-grid">
+        <div class="input-col">
+            <button class="btn-stock stock-a" onclick="addP('A', 1)">1 Stock</button>
+            <button class="btn-stock stock-a" onclick="addP('A', 2)">2 Stöcke</button>
+            <button class="btn-stock stock-a" onclick="addP('A', 3)">3 Stöcke</button>
+            <button class="btn-stock stock-a" onclick="addP('A', 4)">4 Stöcke</button>
+        </div>
+        <div class="input-col">
+            <button class="btn-stock stock-b" onclick="addP('B', 1)">1 Stock</button>
+            <button class="btn-stock stock-b" onclick="addP('B', 2)">2 Stöcke</button>
+            <button class="btn-stock stock-b" onclick="addP('B', 3)">3 Stöcke</button>
+            <button class="btn-stock stock-b" onclick="addP('B', 4)">4 Stöcke</button>
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <button class="btn-nav" onclick="undo()">← KORREKTUR</button>
+        <button class="btn-nav" onclick="redo()">VORWÄRTS →</button>
+        <button class="btn-nav" style="background:#441111" onclick="resetGame()">NEUES SPIEL</button>
+    </div>
+
+    <div id="win-modal" class="win-modal">
+        <h2 id="win-title" style="margin-top:0">SIEG!</h2>
+        <div id="win-detail" style="font-size: 20px; margin: 20px 0; color: #00BFFF;"></div>
+        <div id="win-money" style="font-size: 14px; margin-bottom: 20px;"></div>
+        <button class="btn-save" style="width:100%" onclick="closeWinModal()">NÄCHSTE MOAR</button>
     </div>
 
     <div id="settings-screen" class="overlay">
-        <div class="settings-header">EINSTELLUNGEN</div>
-
-        <div class="setting-row">
-            <span class="label-text" style="color:#00BFFF">Name Team A:</span>
-            <input type="text" id="in-name-a" class="setting-input">
-            <div class="color-picker-wrapper" id="rect-a"><input type="color" id="in-col-a"></div>
+        <div class="settings-tab-bar">
+            <button class="tab-btn active" id="tab-gen" onclick="switchTab('gen')">ALLGEMEIN</button>
+            <button class="tab-btn" id="tab-online" onclick="switchTab('online')">ONLINE-MODUS</button>
         </div>
 
-        <div class="setting-row">
-            <span class="label-text" style="color:#FF4500">Name Team B:</span>
-            <input type="text" id="in-name-b" class="setting-input">
-            <div class="color-picker-wrapper" id="rect-b"><input type="color" id="in-col-b"></div>
+        <div id="section-gen" class="setting-section">
+            <div class="setting-row color-row">
+                <div style="width:70%"><label>NAME TEAM A:</label><input type="text" id="in-name-a" class="setting-input"></div>
+                <div class="color-box" id="rect-a"><input type="color" id="in-col-a"></div>
+            </div>
+            <div class="setting-row color-row">
+                <div style="width:70%"><label>NAME TEAM B:</label><input type="text" id="in-name-b" class="setting-input"></div>
+                <div class="color-box" id="rect-b"><input type="color" id="in-col-b"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="setting-row" style="flex:1"><label>1. STOCK:</label><input type="number" id="in-p1" class="setting-input"></div>
+                <div class="setting-row" style="flex:1"><label>WEITERE:</label><input type="number" id="in-pn" class="setting-input"></div>
+            </div>
+            <div class="setting-row"><label>SIEG BEI PUNKTE:</label><input type="number" id="in-win" class="setting-input"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="setting-row" style="flex:1"><label>EINFACH (€):</label><input type="number" id="in-en" step="0.1" class="setting-input"></div>
+                <div class="setting-row" style="flex:1"><label>DREIFACH (€):</label><input type="number" id="in-dr" step="0.1" class="setting-input"></div>
+            </div>
+            <div class="setting-row" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="in-reset-opp"> <span style="font-size:12px">Gegner bei Sieg auf 0 setzen</span>
+            </div>
         </div>
 
-        <div class="setting-row"><span class="label-text">Punkte 1. Stock:</span><input type="number" id="in-p1" class="setting-input"></div>
-        <div class="setting-row"><span class="label-text">Punkte weitere:</span><input type="number" id="in-pn" class="setting-input"></div>
-        <div class="setting-row"><span class="label-text">Moar-Sieg bei:</span><input type="number" id="in-win" class="setting-input"></div>
-        <div class="setting-row"><span class="label-text">Einfach-Sieg Preis (€):</span><input type="number" id="in-en" step="0.1" class="setting-input"></div>
-        <div class="setting-row"><span class="label-text">Dreifach-Sieg Preis (€):</span><input type="number" id="in-dr" step="0.1" class="setting-input"></div>
-        
-        <div class="setting-row" style="justify-content: center; gap: 10px;">
-            <input type="checkbox" id="in-reset-opp">
-            <span style="font-size: 11px;">Gegner bei Sieg auf 0 setzen</span>
-        </div>
+        <div id="section-online" class="setting-section" style="display:none">
+            <div id="online-off">
+                <input type="text" id="user-name" class="setting-input" placeholder="Dein Name" style="margin-bottom:10px;">
+                <button class="btn-save" style="width:100%; background:#444;" onclick="hostGroup()">GRUPPE HOSTEN</button>
+                <div style="margin:20px 0; text-align:center; color:#555;">— ODER —</div>
+                <input type="text" id="join-code" class="setting-input" placeholder="Code eingeben" style="text-align:center;">
+                <button class="btn-save" style="width:100%; background:#00BFFF; margin-top:10px;" onclick="joinGroup()">BEITRETEN</button>
+            </div>
 
-        <div class="online-box">
-            <div style="color:#00BFFF; font-weight:bold; margin-bottom:10px;">ONLINE-MODUS</div>
-            
-            <div id="host-section">
-                <button onclick="hostGroup()" style="background:#444; color:white; border:none; padding:8px; width:100%; border-radius:5px;">Gruppe hosten</button>
-                <div id="host-controls" style="display:none; margin-top:10px; font-size:12px;">
-                    Code: <b id="host-code-display" style="font-size:18px; color:lime;"></b><br>
-                    Rolle für Gäste: 
-                    <select id="guest-role-select" onchange="updateGuestRole()">
-                        <option value="read">Nur Zuschauer</option>
-                        <option value="write">Schreiber (darf Punkte geben)</option>
-                    </select>
+            <div id="online-on" style="display:none">
+                <div style="background:#111; padding:15px; border-radius:10px; text-align:center; border:1px solid #00BFFF">
+                    <div style="font-size:10px; color:#777;">RAUM-CODE</div>
+                    <div id="display-room-code" style="font-size:32px; font-weight:bold; color:lime; letter-spacing:2px;">----</div>
+                    <button onclick="shareWhatsApp()" style="background:#25D366; color:white; border:none; padding:8px 15px; border-radius:20px; font-size:12px; margin-top:10px;">WhatsApp senden</button>
                 </div>
-            </div>
 
-            <div id="join-section" style="margin-top:15px; border-top:1px solid #222; padding-top:10px;">
-                <input type="text" id="join-code-input" placeholder="Code eingeben" style="width:60%; padding:5px;">
-                <button onclick="joinGroup()" style="padding:5px 10px;">Beitreten</button>
+                <div id="admin-controls" style="margin-top:20px; display:none;">
+                    <label>MITGLIEDER & ROLLEN:</label>
+                    <div id="member-list"></div>
+                    <div style="margin-top:10px;"><label>STANDARDROLLE FÜR NEUE:</label>
+                        <select id="def-role" onchange="updateDefRole()" class="setting-input" style="padding:5px;">
+                            <option value="read">Zuschauer</option>
+                            <option value="write">Schreiber</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-factory" style="width:100%;" onclick="location.reload()">VERBINDUNG TRENNEN</button>
             </div>
-            
-            <div id="online-status" style="margin-top:10px; font-size:10px; color:#777;">Status: Lokal</div>
         </div>
 
-        <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
-        <button class="btn-back" onclick="closeSettings()">ZURÜCK</button>
-        <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
+        <div class="footer-btns">
+            <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
+            <button class="btn-save" style="background:#444" onclick="closeSettings()">ZURÜCK</button>
+            <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Deine Firebase Config
+        // Firebase Config (von Screenshot)
         const firebaseConfig = {
             apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U",
             authDomain: "eisstock-live.firebaseapp.com",
@@ -136,20 +191,78 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let s = { nameA:"Team A", nameB:"Team B", colA:"#00BFFF", colB:"#FF4500", p1:6, pn:3, win:12, en:0.5, dr:1.5, resetOpp:true };
+        // State
+        let s = JSON.parse(localStorage.getItem('es_settings')) || { nameA:"Team A", nameB:"Team B", colA:"#00BFFF", colB:"#FF4500", p1:6, pn:3, win:12, en:0.5, dr:1.5, resetOpp:true, defRole:'read' };
         let state = { ga:0, pa:0, gb:0, pb:0 };
-        let currentRoom = null;
-        let myRole = 'admin'; // 'admin' (Host), 'write', 'read'
+        let history = [JSON.stringify(state)];
+        let histIdx = 0;
+        let room = null;
+        let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substring(7);
+        localStorage.setItem('es_uid', myId);
+        let myRole = 'admin';
 
-        // --- LOKALE LOGIK ---
-        window.addP = (team) => {
+        // Vibration
+        const vib = () => { if(navigator.vibrate) navigator.vibrate(50); };
+
+        window.addP = (team, stocks) => {
             if(myRole === 'read') return;
-            let earned = (team === 'A' ? state.pa : state.pb) === 0 ? s.p1 : s.pn;
-            if(team === 'A') state.pa += earned; else state.pb += earned;
+            vib();
+            let last = JSON.parse(history[histIdx]);
+            let n = {...last};
             
-            if(state.pa >= s.win) { state.ga++; state.pa=0; if(s.resetOpp) state.pb=0; }
-            if(state.pb >= s.win) { state.gb++; state.pb=0; if(s.resetOpp) state.pa=0; }
+            let currentP = team === 'A' ? n.pa : n.pb;
+            let earned = (currentP === 0) ? s.p1 + (stocks-1)*s.pn : stocks*s.pn;
+            
+            if(team === 'A') n.pa += earned; else n.pb += earned;
+
+            // Sieg-Check
+            if(n.pa >= s.win || n.pb >= s.win) {
+                const winner = n.pa >= s.win ? 'A' : 'B';
+                const loserP = winner === 'A' ? n.pb : n.pa;
+                const isSchneider = (loserP === 0);
+                
+                let winType = "";
+                let winRatio = "";
+                let costText = "";
+
+                if(winner === 'A') {
+                    if(isSchneider) { n.ga += 3; winRatio = "3 : 0"; winType = "DREIFACH-SIEG (Schneider)"; costText = `${s.nameB} zahlt ${s.dr.toFixed(2)}€`; }
+                    else { n.ga += 2; n.gb += 1; winRatio = "2 : 1"; winType = "EINFACH-SIEG"; costText = `${s.nameB} zahlt ${s.en.toFixed(2)}€`; }
+                } else {
+                    if(isSchneider) { n.gb += 3; winRatio = "0 : 3"; winType = "DREIFACH-SIEG (Schneider)"; costText = `${s.nameA} zahlt ${s.dr.toFixed(2)}€`; }
+                    else { n.gb += 2; n.ga += 1; winRatio = "1 : 2"; winType = "EINFACH-SIEG"; costText = `${s.nameA} zahlt ${s.en.toFixed(2)}€`; }
+                }
+
+                showWin(winType, winRatio, costText);
+                n.pa = 0; n.pb = 0;
+                if(s.resetOpp) { /* schon durch pa/pb=0 erledigt */ }
+            }
+
+            history = history.slice(0, histIdx + 1);
+            history.push(JSON.stringify(n));
+            if(history.length > 11) history.shift(); else histIdx++;
+            state = n;
             sync(); updateUI();
+        };
+
+        function showWin(type, ratio, cost) {
+            document.getElementById('win-title').innerText = type;
+            document.getElementById('win-detail').innerText = ratio;
+            document.getElementById('win-money').innerText = cost;
+            document.getElementById('win-modal').style.display = 'block';
+        }
+        window.closeWinModal = () => document.getElementById('win-modal').style.display = 'none';
+
+        window.undo = () => { if(histIdx > 0 && myRole !== 'read') { histIdx--; state = JSON.parse(history[histIdx]); sync(); updateUI(); vib(); } };
+        window.redo = () => { if(histIdx < history.length - 1 && myRole !== 'read') { histIdx++; state = JSON.parse(history[histIdx]); sync(); updateUI(); vib(); } };
+        window.resetGame = () => { if(confirm("Wirklich alles auf Null setzen?") && myRole !== 'read') { state={ga:0, pa:0, gb:0, pb:0}; history=[JSON.stringify(state)]; histIdx=0; sync(); updateUI(); vib(); } };
+
+        // Settings Tabs
+        window.switchTab = (t) => {
+            document.getElementById('section-gen').style.display = t === 'gen' ? 'block' : 'none';
+            document.getElementById('section-online').style.display = t === 'online' ? 'block' : 'none';
+            document.getElementById('tab-gen').className = t === 'gen' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-online').className = t === 'online' ? 'tab-btn active' : 'tab-btn';
         };
 
         window.openSettings = () => {
@@ -167,7 +280,7 @@
         };
 
         window.saveSettings = () => {
-            if(myRole !== 'admin') { alert("Nur der Host darf Einstellungen ändern!"); return; }
+            if(myRole !== 'admin') { alert("Nur der Admin darf Einstellungen ändern!"); return; }
             s.nameA = document.getElementById('in-name-a').value;
             s.nameB = document.getElementById('in-name-b').value;
             s.colA = document.getElementById('in-col-a').value;
@@ -178,84 +291,102 @@
             s.en = parseFloat(document.getElementById('in-en').value);
             s.dr = parseFloat(document.getElementById('in-dr').value);
             s.resetOpp = document.getElementById('in-reset-opp').checked;
+            localStorage.setItem('es_settings', JSON.stringify(s));
             sync(); closeSettings(); updateUI();
         };
-
         window.closeSettings = () => document.getElementById('settings-screen').style.display = 'none';
+        window.factoryReset = () => { if(confirm("Alle Einstellungen zurücksetzen?")) { localStorage.clear(); location.reload(); } };
 
-        // --- ONLINE LOGIK ---
+        // ONLINE MODUS
         window.hostGroup = () => {
-            const code = "ST-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-            currentRoom = code;
-            myRole = 'admin';
-            
-            // Raum in Firebase erstellen
-            set(ref(db, 'rooms/' + code), {
-                settings: s,
-                state: state,
-                allowedRole: document.getElementById('guest-role-select').value
-            });
-
-            document.getElementById('host-controls').style.display = 'block';
-            document.getElementById('host-code-display').innerText = code;
-            document.getElementById('online-status').innerText = "Status: HOSTING (" + code + ")";
-            listenToRoom();
+            const userName = document.getElementById('user-name').value || "Host";
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            room = code; myRole = 'admin';
+            set(ref(db, 'rooms/' + code), { settings: s, state: state, members: { [myId]: { name: userName, role: 'admin' } }, defRole: 'read' });
+            setupOnlineUI(code);
+            listenRoom();
         };
 
         window.joinGroup = () => {
-            const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+            const code = document.getElementById('join-code').value.trim().toUpperCase();
+            const userName = document.getElementById('user-name').value || "Gast";
             if(!code) return;
-            currentRoom = code;
-
+            room = code;
             onValue(ref(db, 'rooms/' + code), (snap) => {
                 const data = snap.val();
                 if(data) {
-                    myRole = data.allowedRole; // Rolle wird vom Host vorgegeben!
-                    s = data.settings;
-                    state = data.state;
-                    document.getElementById('online-status').innerText = "Status: VERBUNDEN (" + (myRole === 'read' ? 'Zuschauer' : 'Schreiber') + ")";
-                    updateUI();
-                } else {
-                    alert("Raum nicht gefunden!");
-                }
+                    if(!data.members[myId]) {
+                        update(ref(db, `rooms/${code}/members/${myId}`), { name: userName, role: data.defRole });
+                    }
+                    setupOnlineUI(code);
+                    listenRoom();
+                } else alert("Raum nicht gefunden!");
             }, { onlyOnce: true });
-            listenToRoom();
         };
 
-        function listenToRoom() {
-            onValue(ref(db, 'rooms/' + currentRoom), (snap) => {
+        function listenRoom() {
+            onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
-                if(data) {
-                    state = data.state;
-                    s = data.settings;
-                    updateUI();
-                }
+                if(!data) return;
+                s = data.settings;
+                state = data.state;
+                myRole = data.members[myId]?.role || 'read';
+                updateUI();
+                if(myRole === 'admin') renderMemberList(data.members);
             });
         }
 
-        window.updateGuestRole = () => {
-            if(currentRoom && myRole === 'admin') {
-                update(ref(db, 'rooms/' + currentRoom), { allowedRole: document.getElementById('guest-role-select').value });
-            }
-        };
-
-        function sync() {
-            if(currentRoom && myRole !== 'read') {
-                update(ref(db, 'rooms/' + currentRoom), { state: state, settings: s });
+        function renderMemberList(members) {
+            const list = document.getElementById('member-list');
+            list.innerHTML = "";
+            for(let id in members) {
+                if(id === myId) continue;
+                const m = members[id];
+                const div = document.createElement('div');
+                div.className = "member-item";
+                div.innerHTML = `<span>${m.name}</span>
+                    <select class="role-select" onchange="changeUserRole('${id}', this.value)">
+                        <option value="read" ${m.role==='read'?'selected':''}>Zuschauer</option>
+                        <option value="write" ${m.role==='write'?'selected':''}>Schreiber</option>
+                        <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
+                    </select>`;
+                list.appendChild(div);
             }
         }
+
+        window.changeUserRole = (uid, role) => { update(ref(db, `rooms/${room}/members/${uid}`), { role }); };
+        window.updateDefRole = () => { update(ref(db, `rooms/${room}`), { defRole: document.getElementById('def-role').value }); };
+
+        window.shareWhatsApp = () => {
+            const text = encodeURIComponent(`Komm in meine Eisstock-Gruppe! Code: ${room}\nLink: ${window.location.href}`);
+            window.open(`https://wa.me/?text=${text}`);
+        };
+
+        function setupOnlineUI(code) {
+            document.getElementById('online-off').style.display = 'none';
+            document.getElementById('online-on').style.display = 'block';
+            document.getElementById('display-room-code').innerText = code;
+            document.getElementById('room-badge').innerText = "LIVE: " + code;
+            document.getElementById('room-badge').style.color = "lime";
+            if(myRole === 'admin') document.getElementById('admin-controls').style.display = 'block';
+        }
+
+        function sync() { if(room && myRole !== 'read') update(ref(db, 'rooms/' + room), { state, settings: s }); }
 
         function updateUI() {
             document.getElementById('ga').innerText = state.ga;
             document.getElementById('gb').innerText = state.gb;
-            document.getElementById('pa').innerText = "TEIL: " + state.pa;
-            document.getElementById('pb').innerText = "TEIL: " + state.pb;
+            document.getElementById('pa').innerText = "PUNKTE: " + state.pa;
+            document.getElementById('pb').innerText = "PUNKTE: " + state.pb;
             document.getElementById('disp-name-a').innerText = s.nameA;
             document.getElementById('disp-name-b').innerText = s.nameB;
             document.getElementById('rect-a').style.backgroundColor = s.colA;
             document.getElementById('rect-b').style.backgroundColor = s.colB;
             document.documentElement.style.setProperty('--color-a', s.colA);
             document.documentElement.style.setProperty('--color-b', s.colB);
+            
+            const isRead = myRole === 'read';
+            document.querySelectorAll('.btn-stock').forEach(b => b.disabled = isRead);
         }
 
         updateUI();
