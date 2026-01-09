@@ -3,56 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eisstockprofi Web</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>Eisstockprofi Live</title>
     
     <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icon.png">
 
     <style>
-        :root {
-            --color-a: #00BFFF;
-            --color-b: #FF4500;
-        }
+        :root { --color-a: #00BFFF; --color-b: #FF4500; }
         body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; user-select: none; -webkit-user-select: none; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
-        .btn-reset { background: #B22222; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-settings { background: none; border: none; font-size: 24px; cursor: pointer; }
-        
-        .scoreboard { display: flex; justify-content: space-around; margin-top: 20px; }
+        .btn-reset { background: #B22222; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; }
+        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 10px; background: #333; }
+        .live-active { background: #228B22; color: white; animation: blink 2s infinite; }
+        @keyframes blink { 50% { opacity: 0.6; } }
+
+        .scoreboard { display: flex; justify-content: space-around; margin-top: 15px; }
         .score-card { border: 3px solid; border-radius: 12px; width: 45%; padding: 10px; background: #1A1A1A; }
         #card-a { border-color: var(--color-a); }
         #card-b { border-color: var(--color-b); }
-        
         .points-big { font-size: 60px; font-weight: 900; margin: 5px 0; }
         
-        .input-area { display: flex; justify-content: space-around; margin-top: 30px; }
+        .input-area { display: flex; justify-content: space-around; margin-top: 20px; }
         .input-column { display: flex; flex-direction: column; width: 45%; }
         .btn-stock { margin: 5px; padding: 15px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
         .stock-a { background: var(--color-a); }
         .stock-b { background: var(--color-b); }
+        .btn-stock:disabled { opacity: 0.2; }
         
-        .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; position: fixed; bottom: 20px; width: calc(100% - 20px); }
-        .btn-nav { background: #E0E0E0; color: black; border: none; padding: 20px; border-radius: 10px; font-weight: 900; width: 48%; cursor: pointer; }
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; }
+        .btn-nav { background: #E0E0E0; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 48%; }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #111; color: white; border: 1px solid #444; border-radius: 8px; box-sizing: border-box; }
         
-        #settings-screen, #win-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #111; color: white; border: 1px solid #333; border-radius: 5px; font-size: 16px; }
-        .color-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; margin-top: 15px; }
-        input[type="color"] { border: none; width: 60px; height: 40px; cursor: pointer; background: none; }
+        .btn-primary { background: #00BFFF; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; }
+        .btn-secondary { background: #333; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px; }
         
-        .btn-save { background: #228B22; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
-        .btn-factory { background: #555; color: #ccc; border: none; padding: 10px; width: 100%; border-radius: 10px; font-size: 14px; margin-top: 40px; cursor: pointer; }
-        .btn-finish { background: #228B22; color: white; border: none; padding: 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 20px; margin-top: 30px; }
-        #win-screen { border: 10px solid #B22222; }
-        .win-price { font-size: 60px; color: yellow; font-weight: bold; margin-top: 10px; }
+        .role-selector { display: flex; gap: 5px; margin-bottom: 20px; }
+        .role-btn { flex: 1; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        .role-active { background: #00BFFF; border-color: white; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <button class="btn-reset" onclick="softReset()">↺ RESET</button>
-        <button class="btn-settings" onclick="openSettings()">⚙️</button>
+        <button class="btn-reset" onclick="handleReset()" id="reset-btn">↺ RESET</button>
+        <div id="live-indicator" class="status-badge">LOKALER MODUS</div>
+        <button style="background:none; border:none; font-size:24px; color:white;" onclick="openSettings()">⚙️</button>
     </div>
 
     <div class="scoreboard">
@@ -70,194 +68,169 @@
 
     <div class="input-area">
         <div class="input-column">
-            <button class="btn-stock stock-a" onclick="addPoints('A', 1)">1 Stock</button>
-            <button class="btn-stock stock-a" onclick="addPoints('A', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-a" onclick="addPoints('A', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-a" onclick="addPoints('A', 4)">4 Stöcke</button>
+            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 1)">1 Stock</button>
+            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 2)">2 Stöcke</button>
+            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 3)">3 Stöcke</button>
+            <button class="btn-stock stock-a action-btn" onclick="addPoints('A', 4)">4 Stöcke</button>
         </div>
         <div class="input-column">
-            <button class="btn-stock stock-b" onclick="addPoints('B', 1)">1 Stock</button>
-            <button class="btn-stock stock-b" onclick="addPoints('B', 2)">2 Stöcke</button>
-            <button class="btn-stock stock-b" onclick="addPoints('B', 3)">3 Stöcke</button>
-            <button class="btn-stock stock-b" onclick="addPoints('B', 4)">4 Stöcke</button>
+            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 1)">1 Stock</button>
+            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 2)">2 Stöcke</button>
+            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 3)">3 Stöcke</button>
+            <button class="btn-stock stock-b action-btn" onclick="addPoints('B', 4)">4 Stöcke</button>
         </div>
     </div>
 
     <div class="nav-buttons">
-        <button class="btn-nav" onclick="undo()">← KORREKTUR</button>
-        <button class="btn-nav" onclick="redo()">VORWÄRTS →</button>
+        <button class="btn-nav action-btn" onclick="undo()">← KORREKTUR</button>
+        <button class="btn-nav action-btn" onclick="redo()">VORWÄRTS →</button>
     </div>
 
-    <div id="settings-screen">
-        <h2>EINSTELLUNGEN</h2>
-        <div class="color-row">
-            <label id="label-set-a" style="font-weight: bold;">Name Team A:</label>
-            <input type="color" id="set-color-a">
+    <div id="settings-screen" class="overlay">
+        <h2>LIVE-EINSTELLUNGEN</h2>
+        <div id="live-setup">
+            <label>Raum-Code (leer lassen für Auto-Code):</label>
+            <input type="text" id="room-code" placeholder="Z.B. STOCK1">
+            <label>Deine Rolle:</label>
+            <div class="role-selector">
+                <button class="role-btn role-active" id="btn-admin" onclick="updateRole('admin')">ADMIN</button>
+                <button class="role-btn" id="btn-write" onclick="updateRole('write')">SCHREIBER</button>
+                <button class="role-btn" id="btn-read" onclick="updateRole('read')">ZUSCHAUER</button>
+            </div>
+            <button class="btn-primary" onclick="initLiveMode()">LIVE-MODUS STARTEN</button>
         </div>
-        <input type="text" id="set-name-a" placeholder="Team A">
         
-        <div class="color-row">
-            <label id="label-set-b" style="font-weight: bold;">Name Team B:</label>
-            <input type="color" id="set-color-b">
+        <div id="live-info" style="display:none; margin-top:10px;">
+            <p>Verbunden mit Raum: <b id="room-id-display"></b></p>
+            <button class="btn-secondary" onclick="location.reload()">Raum verlassen / Trennen</button>
         </div>
-        <input type="text" id="set-name-b" placeholder="Team B">
+
+        <hr style="margin:20px 0; border:0.5px solid #333;">
         
-        <hr style="border: 0.5px solid #333; margin: 20px 0;">
-        <label>Punkte 1. Stock:</label><input type="number" id="set-p1">
-        <label>Punkte weitere:</label><input type="number" id="set-pNext">
-        <label>Moar-Sieg bei:</label><input type="number" id="set-pWin">
-        <label>Einfach-Sieg Preis (€):</label><input type="number" id="set-betN" step="0.10">
-        <label>Dreifach-Sieg Preis (€):</label><input type="number" id="set-betC" step="0.10">
-        <label style="display:block; margin-top:10px;"><input type="checkbox" id="set-reset"> Gegner bei Sieg auf 0 setzen</label>
-        
-        <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
-        
-        <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
+        <div id="admin-settings">
+            <label>Team Namen:</label>
+            <input type="text" id="set-name-a" placeholder="Team A">
+            <input type="text" id="set-name-b" placeholder="Team B">
+            <label>Farbe A & B:</label>
+            <div style="display:flex; gap:10px;">
+                <input type="color" id="set-color-a">
+                <input type="color" id="set-color-b">
+            </div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:20px;" onclick="saveLocalSettings()">SPEICHERN & SCHLIESSEN</button>
     </div>
 
-    <div id="win-screen">
-        <div style="text-align:right; padding: 10px;"><button onclick="closeWinScreen()" style="background:none; color:white; border:none; font-size:35px;">✕</button></div>
-        <h2 style="color:#B22222; font-size:28px; margin-top:0;">PARTIE BEENDET</h2>
-        <p id="win-type" style="color:white; font-size:22px; font-weight:bold;"></p>
-        <h1 id="win-winner" style="font-size: 45px; margin: 15px 0;"></h1>
-        <p id="win-loser-text" style="font-size:20px;"></p>
-        <div class="win-price" id="win-price-display"></div>
-        <button class="btn-finish" onclick="softReset()">NÄCHSTE PARTIE STARTEN</button>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    <script>
-        const DEFAULTS = {
-            teamA:"Team A", teamB:"Team B", 
-            p1:6, pNext:3, pWin:12, 
-            betN:0.5, betC:1.5, reset:true,
-            colorA: "#00BFFF", colorB: "#FF4500"
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U",
+            authDomain: "eisstock-live.firebaseapp.com",
+            projectId: "eisstock-live",
+            storageBucket: "eisstock-live.firebasestorage.app",
+            messagingSenderId: "201538137304",
+            appId: "1:201538137304:web:78362c30c45c006cb63bad",
+            databaseURL: "https://eisstock-live-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
-        let settings = JSON.parse(localStorage.getItem('eisstock_settings_v5')) || {...DEFAULTS};
-        let history = JSON.parse(localStorage.getItem('eisstock_history_v5')) || [{ga:0, pa:0, gb:0, pb:0}];
-        let currentIndex = history.length - 1;
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        function applyColors() {
-            document.documentElement.style.setProperty('--color-a', settings.colorA);
-            document.documentElement.style.setProperty('--color-b', settings.colorB);
-            const la = document.getElementById('label-set-a');
-            const lb = document.getElementById('label-set-b');
-            if(la && lb) {
-                la.style.color = settings.colorA;
-                lb.style.color = settings.colorB;
-            }
-        }
+        let settings = { teamA: "Team A", teamB: "Team B", colorA: "#00BFFF", colorB: "#FF4500", p1: 6, pNext: 3, pWin: 12, betN: 0.5, betC: 1.5 };
+        let history = [{ga:0, pa:0, gb:0, pb:0}];
+        let currentIndex = 0;
+        let currentRoom = null;
+        let myRole = 'admin';
 
-        function saveAll() {
-            if (history.length > 10) {
-                history = history.slice(history.length - 10);
-                currentIndex = history.length - 1;
-            }
-            localStorage.setItem('eisstock_settings_v5', JSON.stringify(settings));
-            localStorage.setItem('eisstock_history_v5', JSON.stringify(history));
-            applyColors();
-        }
+        window.updateRole = (r) => {
+            myRole = r;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('role-active'));
+            document.getElementById('btn-' + r).classList.add('role-active');
+        };
 
-        function updateUI() {
-            let cur = history[currentIndex];
-            document.getElementById('games-a').innerText = cur.ga;
-            document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
-            document.getElementById('games-b').innerText = cur.gb;
-            document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
-            document.getElementById('display-team-a').innerText = settings.teamA || "Team A";
-            document.getElementById('display-team-b').innerText = settings.teamB || "Team B";
+        window.initLiveMode = () => {
+            let code = document.getElementById('room-code').value.trim().toUpperCase();
+            if(!code) code = "ST-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+            currentRoom = code;
             
-            if (cur.ga + cur.gb >= 3) {
-                showWinner(cur);
-            } else {
-                document.getElementById('win-screen').style.display = 'none';
+            onValue(ref(db, 'rooms/' + currentRoom), (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    settings = data.settings;
+                    history = data.history;
+                    currentIndex = data.currentIndex;
+                    updateUI();
+                } else if(myRole === 'admin') {
+                    pushData();
+                }
+            });
+
+            document.getElementById('live-setup').style.display = 'none';
+            document.getElementById('live-info').style.display = 'block';
+            document.getElementById('room-id-display').innerText = currentRoom;
+            document.getElementById('live-indicator').innerText = "LIVE: " + currentRoom;
+            document.getElementById('live-indicator').classList.add('live-active');
+        };
+
+        function pushData() {
+            if(currentRoom && myRole !== 'read') {
+                set(ref(db, 'rooms/' + currentRoom), { settings, history, currentIndex });
             }
-            saveAll();
         }
 
-        function addPoints(team, stocks) {
+        window.addPoints = (team, stocks) => {
+            if(myRole === 'read') return;
             let last = history[currentIndex];
-            if (last.ga + last.gb >= 3) return;
             let next = {...last};
-            if (team === 'A') {
-                let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+            let earned = (team === 'A' ? next.pa : next.pb) === 0 ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+            
+            if(team === 'A') {
                 next.pa += earned;
-                if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
+                if(next.pa >= settings.pWin) { next.ga++; next.pa = 0; next.pb = 0; }
             } else {
-                let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                 next.pb += earned;
-                if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+                if(next.pb >= settings.pWin) { next.gb++; next.pa = 0; next.pb = 0; }
             }
             history = history.slice(0, currentIndex + 1);
             history.push(next);
             currentIndex++;
+            pushData();
             updateUI();
-        }
+        };
 
-        function undo() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
-        function redo() { if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
-        function softReset() { history.push({ga:0, pa:0, gb:0, pb:0}); currentIndex = history.length - 1; updateUI(); }
+        window.updateUI = () => {
+            const cur = history[currentIndex];
+            document.getElementById('games-a').innerText = cur.ga;
+            document.getElementById('games-b').innerText = cur.gb;
+            document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
+            document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
+            document.getElementById('display-team-a').innerText = settings.teamA;
+            document.getElementById('display-team-b').innerText = settings.teamB;
+            document.documentElement.style.setProperty('--color-a', settings.colorA);
+            document.documentElement.style.setProperty('--color-b', settings.colorB);
+            
+            const isRead = myRole === 'read';
+            document.querySelectorAll('.action-btn').forEach(b => b.disabled = isRead);
+            document.getElementById('reset-btn').style.display = isRead ? 'none' : 'block';
+        };
 
-        function showWinner(cur) {
-            const winA = cur.ga > cur.gb;
-            const winnerName = winA ? (settings.teamA || "Team A") : (settings.teamB || "Team B");
-            const loserName = winA ? (settings.teamB || "Team B") : (settings.teamA || "Team A");
-            const winnerColor = winA ? settings.colorA : settings.colorB;
-            const loserColor = winA ? settings.colorB : settings.colorA;
-            const scoreText = `(${cur.ga}:${cur.gb})`;
-            const isDreifach = (cur.ga === 0 || cur.gb === 0);
-            document.getElementById('win-type').innerText = (isDreifach ? "DREIFACH-SIEG " : "EINFACH-SIEG ") + scoreText;
-            let winnerEl = document.getElementById('win-winner');
-            winnerEl.innerText = winnerName + " GEWINNT!";
-            winnerEl.style.color = winnerColor;
-            let loserEl = document.getElementById('win-loser-text');
-            loserEl.innerHTML = `<span style="color: ${loserColor}">${loserName}</span> zahlt:`;
-            document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
-            document.getElementById('win-screen').style.display = 'block';
-        }
-
-        function openSettings() {
-            document.getElementById('set-name-a').value = settings.teamA;
-            document.getElementById('set-name-b').value = settings.teamB;
-            document.getElementById('set-color-a').value = settings.colorA;
-            document.getElementById('set-color-b').value = settings.colorB;
-            document.getElementById('set-p1').value = settings.p1;
-            document.getElementById('set-pNext').value = settings.pNext;
-            document.getElementById('set-pWin').value = settings.pWin;
-            document.getElementById('set-betN').value = settings.betN;
-            document.getElementById('set-betC').value = settings.betC;
-            document.getElementById('set-reset').checked = settings.reset;
-            document.getElementById('settings-screen').style.display = 'block';
-            applyColors();
-        }
-
-        function saveSettings() {
-            settings.teamA = document.getElementById('set-name-a').value;
-            settings.teamB = document.getElementById('set-name-b').value;
-            settings.colorA = document.getElementById('set-color-a').value;
-            settings.colorB = document.getElementById('set-color-b').value;
-            settings.p1 = parseInt(document.getElementById('set-p1').value);
-            settings.pNext = parseInt(document.getElementById('set-pNext').value);
-            settings.pWin = parseInt(document.getElementById('set-pWin').value);
-            settings.betN = parseFloat(document.getElementById('set-betN').value);
-            settings.betC = parseFloat(document.getElementById('set-betC').value);
-            settings.reset = document.getElementById('set-reset').checked;
+        window.openSettings = () => document.getElementById('settings-screen').style.display = 'block';
+        window.saveLocalSettings = () => {
+            if(myRole === 'admin') {
+                settings.teamA = document.getElementById('set-name-a').value || settings.teamA;
+                settings.teamB = document.getElementById('set-name-b').value || settings.teamB;
+                settings.colorA = document.getElementById('set-color-a').value;
+                settings.colorB = document.getElementById('set-color-b').value;
+                pushData();
+            }
             document.getElementById('settings-screen').style.display = 'none';
             updateUI();
-        }
+        };
+        window.handleReset = () => { history = [{ga:0, pa:0, gb:0, pb:0}]; currentIndex = 0; pushData(); updateUI(); };
+        window.undo = () => { if(currentIndex > 0) { currentIndex--; pushData(); updateUI(); } };
 
-        function factoryReset() {
-            if(confirm("Alle Einstellungen und Farben auf Standard zurücksetzen?")) {
-                settings = {...DEFAULTS};
-                saveAll();
-                updateUI();
-                document.getElementById('settings-screen').style.display = 'none';
-            }
-        }
-
-        function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
-        
-        applyColors();
         updateUI();
     </script>
 </body>
