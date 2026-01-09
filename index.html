@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eisstockprofi Masterpiece</title>
+    <title>Eisstockprofi Ultimate</title>
     <style>
         :root { --color-a: #00BFFF; --color-b: #FF4500; --bg: #000; }
         body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
@@ -38,6 +38,7 @@
         .s-row { margin-bottom: 15px; }
         .s-label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         .s-input { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        .s-input.error { border-color: red; }
         .s-check { display: flex; align-items: center; gap: 10px; margin: 20px 0; background: #111; padding: 15px; border-radius: 10px; }
         
         /* Buttons Settings */
@@ -148,9 +149,17 @@
         
         <div id="s2" class="s-body" style="display:none">
             <div id="online-setup">
-                <label class="s-label">Dein Spielername</label>
+                <label class="s-label">Dein Spielername (Pflicht)</label>
                 <input id="user-name" class="s-input" placeholder="Name eingeben..." style="margin-bottom:20px;">
                 
+                <div style="background:#222; padding:15px; border-radius:10px; margin-bottom:20px;">
+                     <label class="s-label">Standard-Rechte für Neue</label>
+                     <select id="default-role-sel" class="s-input" style="padding:10px;">
+                         <option value="viewer">Zuschauer (Darf nix)</option>
+                         <option value="player">Spieler (Darf zählen)</option>
+                     </select>
+                </div>
+
                 <button class="btn-nav" style="width:100%; background:#444; color:white; margin-bottom:20px;" onclick="hostGame()">RAUM ERÖFFNEN (HOST)</button>
                 
                 <div style="text-align:center; margin:15px 0; color:#555; font-weight:bold;">ODER BEITRETEN</div>
@@ -185,36 +194,73 @@
         const db = getDatabase(app);
 
         // DEFAULT CONFIG
-        const defaultConfig = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pd:1.50, reset:true };
-        let config = JSON.parse(localStorage.getItem('es_master_cfg')) || {...defaultConfig};
+        const defaultConfig = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pd:1.50, reset:true, defaultRole:'viewer' };
+        let config = JSON.parse(localStorage.getItem('es_ultimate_v2')) || {...defaultConfig};
         let state = { ga:0, pa:0, gb:0, pb:0 };
         let history = [JSON.stringify(state)];
         let hIdx = 0;
 
         // ONLINE
         let room = null;
-        let myRole = 'admin'; // 'admin', 'player', 'viewer'
+        let myRole = 'admin'; 
         let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
         localStorage.setItem('es_uid', myId);
 
         const haptic = () => { if(navigator.vibrate) navigator.vibrate(50); };
 
-        // --- GAME LOGIC ---
+        // --- GAME LOGIC (KORRIGIERT) ---
         window.addStock = (team, count) => {
-            if(myRole === 'viewer') { alert("Als Zuschauer kannst du nicht schreiben!"); return; }
+            if(myRole === 'viewer') return;
             haptic();
             let n = JSON.parse(history[hIdx]);
             
             if(team === 'A') {
+                // Punkte berechnen
                 let p = (n.pa === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
                 n.pa += p;
-                if(config.reset) n.pb = 0;
-                if(n.pa >= config.pw) { n.ga++; n.pa = 0; n.pb = 0; }
+                
+                // Sieg Prüfung (12 erreicht?)
+                if(n.pa >= config.pw) { 
+                    n.ga++; 
+                    n.pa = 0; 
+                    if(config.reset) n.pb = 0; // HIER: Gegner nur auf 0 setzen, wenn Sieg erreicht!
+                }
+            } else {
+                // Punkte berechnen
+                let p = (n.pb === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
+                n.pb += p;
+                
+                // Sieg Prüfung (12 erreicht?)
+                if(n.pb >= config.pw) { 
+                    n.gb++; 
+                    n.pa = 0; // HIER: Gegner nur auf 0 setzen, wenn Sieg erreicht! (Egal ob config.reset, bei Eisstock meist Standard, aber hier nach Regel "config.reset")
+                    if(config.reset) n.pa = 0;
+                    else n.pb = 0; // Fallback: Selbst auf 0, aber Gegner behält? (Standardlogik für Sieg = Selbst 0). 
+                    // KORREKTUR für deine Logik: 
+                    // Wenn Sieg: Selbst auf 0, Big Score +1.
+                    // Wenn Config Reset an: Gegner AUCH auf 0.
+                    n.pb = 0; // Selbst immer 0 nach Big Score
+                }
+            }
+            // Saubere Logik für B (Oben war etwas messy):
+            // Nochmal sauber für beide:
+            
+            // RELOAD LOGIC BLOCK
+            n = JSON.parse(history[hIdx]); // Reset to clean start for this click
+            if(team === 'A') {
+                let p = (n.pa === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
+                n.pa += p;
+                if(n.pa >= config.pw) {
+                    n.ga++; n.pa = 0;
+                    if(config.reset) n.pb = 0;
+                }
             } else {
                 let p = (n.pb === 0) ? config.p1 + (count-1)*config.pn : count*config.pn;
                 n.pb += p;
-                if(config.reset) n.pa = 0;
-                if(n.pb >= config.pw) { n.gb++; n.pa = 0; n.pb = 0; }
+                if(n.pb >= config.pw) {
+                    n.gb++; n.pb = 0;
+                    if(config.reset) n.pa = 0;
+                }
             }
 
             if((n.ga + n.gb >= 3) || n.ga === 3 || n.gb === 3) {
@@ -297,7 +343,6 @@
 
         // --- SETTINGS ---
         window.openSettings = () => {
-            // Fill inputs with current config
             document.getElementById('set-na').value = config.na;
             document.getElementById('set-nb').value = config.nb;
             document.getElementById('set-ca').value = config.ca;
@@ -308,6 +353,7 @@
             document.getElementById('set-pe').value = config.pe;
             document.getElementById('set-pd').value = config.pd;
             document.getElementById('set-reset').checked = config.reset;
+            document.getElementById('default-role-sel').value = config.defaultRole || 'viewer';
             document.getElementById('settings').style.display = 'block';
         };
 
@@ -324,18 +370,17 @@
             config.pe = parseFloat(document.getElementById('set-pe').value);
             config.pd = parseFloat(document.getElementById('set-pd').value);
             config.reset = document.getElementById('set-reset').checked;
+            config.defaultRole = document.getElementById('default-role-sel').value;
             
-            localStorage.setItem('es_master_cfg', JSON.stringify(config));
+            localStorage.setItem('es_ultimate_v2', JSON.stringify(config));
             if(room && myRole === 'admin') update(ref(db, 'rooms/' + room), { settings: config });
             closeSettings();
             render();
         };
 
         window.resetToDefault = () => {
-            if(confirm("Alles auf Standard zurücksetzen?")) {
-                config = {...defaultConfig};
-                saveSettings(); // Speichert und rendert direkt
-            }
+            config = {...defaultConfig};
+            saveSettings(); // Speichert und schließt lautlos
         };
 
         window.setTab = (n) => {
@@ -353,21 +398,43 @@
         }
 
         window.hostGame = () => {
+            const name = document.getElementById('user-name').value;
+            if(!name) { 
+                document.getElementById('user-name').classList.add('error');
+                return;
+            }
+            document.getElementById('user-name').classList.remove('error');
+
             room = Math.random().toString(36).substr(2, 5).toUpperCase();
             myRole = 'admin';
-            const name = document.getElementById('user-name').value || "Host";
-            set(ref(db, 'rooms/' + room), { state, settings: config, members: { [myId]: { name, role: 'admin' } } });
+            config.defaultRole = document.getElementById('default-role-sel').value;
+
+            set(ref(db, 'rooms/' + room), { 
+                state, 
+                settings: config, 
+                members: { [myId]: { name, role: 'admin' } } 
+            });
             initLiveSession();
         };
 
         window.joinGame = () => {
+            const name = document.getElementById('user-name').value;
+            if(!name) { 
+                document.getElementById('user-name').classList.add('error');
+                return;
+            }
+            document.getElementById('user-name').classList.remove('error');
+
             const c = document.getElementById('join-code').value.toUpperCase();
-            const name = document.getElementById('user-name').value || "Gast";
+            if(!c) return;
+
             onValue(ref(db, 'rooms/' + c), (snap) => {
                 if(snap.exists()) {
                     room = c;
-                    myRole = 'viewer'; // Default Startrolle
-                    update(ref(db, `rooms/${room}/members/${myId}`), { name, role: 'viewer' });
+                    const data = snap.val();
+                    const joinRole = data.settings && data.settings.defaultRole ? data.settings.defaultRole : 'viewer';
+                    myRole = joinRole; 
+                    update(ref(db, `rooms/${room}/members/${myId}`), { name, role: joinRole });
                     initLiveSession();
                 } else { alert("Raum nicht gefunden!"); }
             }, { onlyOnce: true });
@@ -379,21 +446,17 @@
             document.getElementById('room-code-display').innerText = room;
             document.getElementById('room-info').innerText = "ONLINE: " + room;
             
-            // Listener for State & Settings
             onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
                 if(data) {
                     state = data.state;
-                    // Wenn ich nicht Admin bin, übernehme ich das Design vom Host
                     if(myRole !== 'admin' && data.settings) {
                         config = data.settings;
                     }
                     if(data.members && data.members[myId]) {
                         myRole = data.members[myId].role;
                     } else if(myRole !== 'admin') {
-                         // Gekickt worden
                          leaveRoom();
-                         alert("Du wurdest entfernt.");
                          return;
                     }
                     render();
@@ -444,7 +507,7 @@
             document.getElementById('online-setup').style.display = 'block';
             document.getElementById('online-active').style.display = 'none';
             document.getElementById('room-info').innerText = "LOKAL";
-            config = JSON.parse(localStorage.getItem('es_master_cfg')) || {...defaultConfig}; // Eigene Config laden
+            config = JSON.parse(localStorage.getItem('es_ultimate_v2')) || {...defaultConfig};
             render();
         };
 
@@ -453,7 +516,6 @@
             window.open(`https://wa.me/?text=${encodeURIComponent("Eisstock: Komm rein! " + url)}`);
         };
 
-        // URL Join Check
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('join')) {
             document.getElementById('join-code').value = urlParams.get('join');
