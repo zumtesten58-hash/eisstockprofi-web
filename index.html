@@ -114,8 +114,9 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <div class="s-row" style="flex:1;"><label class="s-label">Ziel-Pkt</label><input type="number" id="set-pw" class="s-input"></div>
-                <div class="s-row" style="flex:1;"><label class="s-label">Preis €</label><input type="number" id="set-pe" class="s-input" step="0.10"></div>
+                <div class="s-row" style="flex:1;"><label class="s-label">Preis Sieg €</label><input type="number" id="set-pe" class="s-input" step="0.10"></div>
             </div>
+            <div class="s-row"><label class="s-label">Preis bei Dreifach-Sieg (3:0) €</label><input type="number" id="set-pe3" class="s-input" step="0.10"></div>
             <div class="s-row" style="background:#111; padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px;">
                 <input type="checkbox" id="set-reset" style="transform:scale(1.5);">
                 <label class="s-label" style="margin:0;">Gegner bei Sieg auf 0 setzen</label>
@@ -138,7 +139,7 @@
             <div id="online-active" style="display:none;">
                 <h1 id="room-code-display" style="font-size:50px; color:#00ff00; text-align:center; margin:0;">-----</h1>
                 <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin:20px 0;">WhatsApp Einladung</button>
-                <label class="s-label">MITGLIEDER (ALLE HABEN SCHREIBRECHTE)</label>
+                <label class="s-label">MITGLIEDER</label>
                 <div id="member-list"></div>
                 <button class="btn-save" onclick="closeSettings()" style="margin-top:20px;">ZURÜCK ZUM SPIEL</button>
                 <button class="btn-back-main" style="background:#d9534f;" onclick="leaveRoom()">RAUM VERLASSEN</button>
@@ -154,7 +155,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let config = JSON.parse(localStorage.getItem('es_final_v1')) || { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, reset:true };
+        let config = JSON.parse(localStorage.getItem('es_final_v1')) || { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, reset:true };
         let state = { ga:0, pa:0, gb:0, pb:0 };
         let history = [JSON.stringify(state)];
         let hIdx = 0;
@@ -169,20 +170,13 @@
             if(team === 'A') {
                 let p = (n.pa === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
                 n.pa += p;
-                if(n.pa >= config.pw) { 
-                    n.ga++; n.pa = 0; 
-                    if(config.reset) n.pb = 0; // GEGNER AUF NULL SETZEN
-                }
+                if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.reset) n.pb = 0; }
             } else {
                 let p = (n.pb === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
                 n.pb += p;
-                if(n.pb >= config.pw) { 
-                    n.gb++; n.pb = 0; 
-                    if(config.reset) n.pa = 0; // GEGNER AUF NULL SETZEN
-                }
+                if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.reset) n.pa = 0; }
             }
             
-            // SIEG LOGIK: Wenn Gesamt-Kehren = 3 oder ein Team 3 Kehren hat
             if(n.ga + n.gb >= 3 || n.ga === 3 || n.gb === 3) {
                 triggerWin(n);
             }
@@ -208,9 +202,12 @@
 
         function triggerWin(n) {
             const winner = n.ga > n.gb ? config.na : config.nb;
+            const isTriple = (n.ga === 3 && n.gb === 0) || (n.gb === 3 && n.ga === 0);
+            const price = isTriple ? config.pe3 : config.pe;
+            
             document.getElementById('win-label').innerText = winner + " GEWINNT!";
             document.getElementById('win-score-display').innerText = `${n.ga} : ${n.gb}`;
-            document.getElementById('win-payment-text').innerText = `Verlierer zahlt ${config.pe.toFixed(2)} €`;
+            document.getElementById('win-payment-text').innerText = `Verlierer zahlt ${price.toFixed(2)} €` + (isTriple ? " (3:0!)" : "");
             document.getElementById('win-overlay-bg').style.display = 'block';
             document.getElementById('win-modal').style.display = 'block';
         }
@@ -255,6 +252,7 @@
             document.getElementById('set-pn').value = config.pn;
             document.getElementById('set-pw').value = config.pw;
             document.getElementById('set-pe').value = config.pe;
+            document.getElementById('set-pe3').value = config.pe3 || 1.50;
             document.getElementById('set-reset').checked = config.reset;
             document.getElementById('settings').style.display = 'block';
         };
@@ -268,6 +266,7 @@
             config.pn = parseInt(document.getElementById('set-pn').value);
             config.pw = parseInt(document.getElementById('set-pw').value);
             config.pe = parseFloat(document.getElementById('set-pe').value);
+            config.pe3 = parseFloat(document.getElementById('set-pe3').value);
             config.reset = document.getElementById('set-reset').checked;
             localStorage.setItem('es_final_v1', JSON.stringify(config));
             if(room) update(ref(db, 'rooms/' + room), { settings: config });
@@ -281,9 +280,7 @@
             const name = document.getElementById('user-name').value;
             if(!name) return alert("Name?");
             const newRoom = Math.random().toString(36).substr(2, 5).toUpperCase();
-            set(ref(db, 'rooms/' + newRoom), { 
-                state, settings: config, members: { [myId]: { name, role: 'player' } } 
-            }).then(() => {
+            set(ref(db, 'rooms/' + newRoom), { state, settings: config, members: { [myId]: { name } } }).then(() => {
                 room = newRoom;
                 localStorage.setItem('es_current_room', room);
                 localStorage.setItem('es_user_name', name);
@@ -295,7 +292,7 @@
             const name = document.getElementById('user-name').value;
             const c = document.getElementById('join-code').value.toUpperCase();
             if(!name || !c) return alert("Daten fehlen");
-            update(ref(db, `rooms/${c}/members/${myId}`), { name, role: 'player' }).then(() => {
+            update(ref(db, `rooms/${c}/members/${myId}`), { name }).then(() => {
                 room = c;
                 localStorage.setItem('es_current_room', room);
                 localStorage.setItem('es_user_name', name);
@@ -311,7 +308,7 @@
             document.getElementById('room-info').innerText = "ONLINE: " + room;
             onValue(ref(db, 'rooms/' + room), (snap) => {
                 const data = snap.val();
-                if(!data) { leaveRoom(); return; }
+                if(!data) return;
                 state = data.state;
                 config = data.settings;
                 render();
@@ -325,7 +322,7 @@
             Object.values(members).forEach(m => {
                 const div = document.createElement('div');
                 div.className = 'member-item';
-                div.innerHTML = `<span>${m.name}</span> <span style="font-size:10px; color:#666;">SPIELER</span>`;
+                div.innerHTML = `<span>${m.name}</span> <span style="font-size:10px; color:#666;">AKTIV</span>`;
                 list.appendChild(div);
             });
         }
