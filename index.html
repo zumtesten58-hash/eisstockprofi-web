@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Eisstockprofi Web</title>
     
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
     <style>
         :root {
             --color-a: #00BFFF;
@@ -37,6 +43,7 @@
         input[type="color"] { border: none; width: 60px; height: 40px; cursor: pointer; background: none; }
         
         .btn-save { background: #228B22; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
+        .btn-factory { background: #555; color: #ccc; border: none; padding: 10px; width: 100%; border-radius: 10px; font-size: 14px; margin-top: 40px; cursor: pointer; }
         .btn-finish { background: #228B22; color: white; border: none; padding: 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 20px; margin-top: 30px; }
         #win-screen { border: 10px solid #B22222; }
         .win-price { font-size: 60px; color: yellow; font-weight: bold; margin-top: 10px; }
@@ -102,7 +109,10 @@
         <label>Einfach-Sieg Preis (€):</label><input type="number" id="set-betN" step="0.10">
         <label>Dreifach-Sieg Preis (€):</label><input type="number" id="set-betC" step="0.10">
         <label style="display:block; margin-top:10px;"><input type="checkbox" id="set-reset"> Gegner bei Sieg auf 0 setzen</label>
+        
         <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
+        
+        <button class="btn-factory" onclick="factoryReset()">⚠️ AUF STANDARD ZURÜCKSETZEN</button>
     </div>
 
     <div id="win-screen">
@@ -116,14 +126,14 @@
     </div>
 
     <script>
-        // Speicher-Version v5 zur Sicherheit gegen alte Daten
-        let settings = JSON.parse(localStorage.getItem('eisstock_settings_v5')) || {
+        const DEFAULTS = {
             teamA:"Team A", teamB:"Team B", 
             p1:6, pNext:3, pWin:12, 
             betN:0.5, betC:1.5, reset:true,
             colorA: "#00BFFF", colorB: "#FF4500"
         };
-        
+
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings_v5')) || {...DEFAULTS};
         let history = JSON.parse(localStorage.getItem('eisstock_history_v5')) || [{ga:0, pa:0, gb:0, pb:0}];
         let currentIndex = history.length - 1;
 
@@ -139,7 +149,6 @@
         }
 
         function saveAll() {
-            // Behalte nur die letzten 10 Spielstände
             if (history.length > 10) {
                 history = history.slice(history.length - 10);
                 currentIndex = history.length - 1;
@@ -169,7 +178,6 @@
         function addPoints(team, stocks) {
             let last = history[currentIndex];
             if (last.ga + last.gb >= 3) return;
-            
             let next = {...last};
             if (team === 'A') {
                 let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
@@ -188,12 +196,7 @@
 
         function undo() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
         function redo() { if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
-        
-        function softReset() { 
-            history.push({ga:0, pa:0, gb:0, pb:0}); 
-            currentIndex = history.length - 1; 
-            updateUI(); 
-        }
+        function softReset() { history.push({ga:0, pa:0, gb:0, pb:0}); currentIndex = history.length - 1; updateUI(); }
 
         function showWinner(cur) {
             const winA = cur.ga > cur.gb;
@@ -201,20 +204,14 @@
             const loserName = winA ? (settings.teamB || "Team B") : (settings.teamA || "Team A");
             const winnerColor = winA ? settings.colorA : settings.colorB;
             const loserColor = winA ? settings.colorB : settings.colorA;
-            
-            // WICHTIG: Stand (A : B) anzeigen
             const scoreText = `(${cur.ga}:${cur.gb})`;
             const isDreifach = (cur.ga === 0 || cur.gb === 0);
-            
             document.getElementById('win-type').innerText = (isDreifach ? "DREIFACH-SIEG " : "EINFACH-SIEG ") + scoreText;
-            
             let winnerEl = document.getElementById('win-winner');
             winnerEl.innerText = winnerName + " GEWINNT!";
             winnerEl.style.color = winnerColor;
-            
             let loserEl = document.getElementById('win-loser-text');
             loserEl.innerHTML = `<span style="color: ${loserColor}">${loserName}</span> zahlt:`;
-            
             document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
             document.getElementById('win-screen').style.display = 'block';
         }
@@ -247,6 +244,15 @@
             settings.reset = document.getElementById('set-reset').checked;
             document.getElementById('settings-screen').style.display = 'none';
             updateUI();
+        }
+
+        function factoryReset() {
+            if(confirm("Alle Einstellungen und Farben auf Standard zurücksetzen?")) {
+                settings = {...DEFAULTS};
+                saveAll();
+                updateUI();
+                document.getElementById('settings-screen').style.display = 'none';
+            }
         }
 
         function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
