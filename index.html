@@ -3,33 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>Eisstockprofi Web</title>
-    <meta name="apple-mobile-web-app-title" content="Eisstockprofi Web">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-
+    
     <style>
+        :root {
+            --color-a: #00BFFF;
+            --color-b: #FF4500;
+        }
         body { background-color: black; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; user-select: none; -webkit-user-select: none; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
         .btn-reset { background: #B22222; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-settings { background: none; border: none; font-size: 24px; cursor: pointer; }
+        
         .scoreboard { display: flex; justify-content: space-around; margin-top: 20px; }
         .score-card { border: 3px solid; border-radius: 12px; width: 45%; padding: 10px; background: #1A1A1A; }
-        .team-a { border-color: #00BFFF; } .team-b { border-color: #FF4500; }
+        #card-a { border-color: var(--color-a); }
+        #card-b { border-color: var(--color-b); }
+        
         .points-big { font-size: 60px; font-weight: 900; margin: 5px 0; }
+        
         .input-area { display: flex; justify-content: space-around; margin-top: 30px; }
         .input-column { display: flex; flex-direction: column; width: 45%; }
         .btn-stock { margin: 5px; padding: 15px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; color: white; cursor: pointer; }
-        .stock-a { background: #00BFFF; } .stock-b { background: #FF4500; }
+        .stock-a { background: var(--color-a); }
+        .stock-b { background: var(--color-b); }
+        
         .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; position: fixed; bottom: 20px; width: calc(100% - 20px); }
         .btn-nav { background: #E0E0E0; color: black; border: none; padding: 20px; border-radius: 10px; font-weight: 900; width: 48%; cursor: pointer; }
+        
         #settings-screen, #win-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        input { width: 100%; padding: 10px; margin: 10px 0; background: #111; color: white; border: 1px solid #333; }
-        .btn-save { background: #00BFFF; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #111; color: white; border: 1px solid #333; border-radius: 5px; }
+        .color-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        input[type="color"] { border: none; width: 50px; height: 30px; cursor: pointer; background: none; }
+        
+        .btn-save { background: #228B22; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 20px; }
         .btn-finish { background: #228B22; color: white; border: none; padding: 20px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 20px; margin-top: 30px; }
         #win-screen { border: 10px solid #B22222; }
         .win-price { font-size: 60px; color: yellow; font-weight: bold; margin-top: 10px; }
@@ -40,41 +47,55 @@
         <button class="btn-reset" onclick="softReset()">↺ RESET</button>
         <button class="btn-settings" onclick="openSettings()">⚙️</button>
     </div>
+
     <div class="scoreboard">
-        <div class="score-card team-a">
-            <div id="display-team-a" style="color:#00BFFF; font-weight:bold;">TEAM A</div>
+        <div class="score-card" id="card-a">
+            <div id="display-team-a" style="font-weight:bold; color: var(--color-a);">TEAM A</div>
             <div id="games-a" class="points-big">0</div>
             <div id="partial-a">TEIL: 0</div>
         </div>
-        <div class="score-card team-b">
-            <div id="display-team-b" style="color:#FF4500; font-weight:bold;">TEAM B</div>
+        <div class="score-card" id="card-b">
+            <div id="display-team-b" style="font-weight:bold; color: var(--color-b);">TEAM B</div>
             <div id="games-b" class="points-big">0</div>
             <div id="partial-b">TEIL: 0</div>
         </div>
     </div>
+
     <div class="input-area">
-        <div class="input-column">
+        <div class="input-column" id="col-a">
             <button class="btn-stock stock-a" onclick="addPoints('A', 1)">1 Stock</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 2)">2 Stöcke</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 3)">3 Stöcke</button>
             <button class="btn-stock stock-a" onclick="addPoints('A', 4)">4 Stöcke</button>
         </div>
-        <div class="input-column">
+        <div class="input-column" id="col-b">
             <button class="btn-stock stock-b" onclick="addPoints('B', 1)">1 Stock</button>
             <button class="btn-stock stock-b" onclick="addPoints('B', 2)">2 Stöcke</button>
             <button class="btn-stock stock-b" onclick="addPoints('B', 3)">3 Stöcke</button>
             <button class="btn-stock stock-b" onclick="addPoints('B', 4)">4 Stöcke</button>
         </div>
     </div>
+
     <div class="nav-buttons">
         <button class="btn-nav" onclick="undo()">← KORREKTUR</button>
         <button class="btn-nav" onclick="redo()">VORWÄRTS →</button>
     </div>
 
     <div id="settings-screen">
-        <h2 style="color:#00BFFF">EINSTELLUNGEN</h2>
-        <label>Name Team A:</label><input type="text" id="set-name-a">
-        <label>Name Team B:</label><input type="text" id="set-name-b">
+        <h2>EINSTELLUNGEN</h2>
+        <div class="color-row">
+            <label style="color: var(--color-a); font-weight: bold;">Name Team A:</label>
+            <input type="color" id="set-color-a">
+        </div>
+        <input type="text" id="set-name-a" placeholder="Name eingeben...">
+        
+        <div class="color-row">
+            <label style="color: var(--color-b); font-weight: bold;">Name Team B:</label>
+            <input type="color" id="set-color-b">
+        </div>
+        <input type="text" id="set-name-b" placeholder="Name eingeben...">
+        
+        <hr style="border: 0.5px solid #333; margin: 20px 0;">
         <label>Punkte 1. Stock:</label><input type="number" id="set-p1">
         <label>Punkte weitere:</label><input type="number" id="set-pNext">
         <label>Moar-Sieg bei:</label><input type="number" id="set-pWin">
@@ -88,38 +109,46 @@
         <div style="text-align:right; padding: 10px;"><button onclick="closeWinScreen()" style="background:none; color:white; border:none; font-size:35px;">✕</button></div>
         <h2 id="win-label" style="color:#B22222; font-size:28px; margin-top:0;">PARTIE BEENDET</h2>
         <p id="win-type" style="color:white; font-size:22px; font-weight:bold;"></p>
-        <h1 id="win-winner" style="color:green; font-size: 45px; margin: 15px 0;"></h1>
+        <h1 id="win-winner" style="font-size: 45px; margin: 15px 0;"></h1>
         <p id="win-loser-text" style="font-size:20px;"></p>
         <div class="win-price" id="win-price-display"></div>
         <button class="btn-finish" onclick="softReset()">NÄCHSTE PARTIE STARTEN</button>
     </div>
 
     <script>
-        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
-        let history = JSON.parse(localStorage.getItem('eisstock_history')) || [{ga:0, pa:0, gb:0, pb:0}];
-        let currentIndex = JSON.parse(localStorage.getItem('eisstock_index')) || 0;
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings_v3')) || {
+            teamA:"TEAM A", teamB:"TEAM B", 
+            p1:6, pNext:3, pWin:12, 
+            betN:0.5, betC:1.5, reset:true,
+            colorA: "#00BFFF", colorB: "#FF4500"
+        };
+        
+        let history = JSON.parse(localStorage.getItem('eisstock_history_v3')) || [{ga:0, pa:0, gb:0, pb:0}];
+        let currentIndex = history.length - 1;
+
+        function applyColors() {
+            document.documentElement.style.setProperty('--color-a', settings.colorA);
+            document.documentElement.style.setProperty('--color-b', settings.colorB);
+        }
 
         function saveAll() {
-            // BEGRENZUNG: Max 10 Einträge behalten
             if (history.length > 10) {
                 history = history.slice(history.length - 10);
                 currentIndex = history.length - 1;
             }
-            localStorage.setItem('eisstock_settings', JSON.stringify(settings));
-            localStorage.setItem('eisstock_history', JSON.stringify(history));
-            localStorage.setItem('eisstock_index', JSON.stringify(currentIndex));
+            localStorage.setItem('eisstock_settings_v3', JSON.stringify(settings));
+            localStorage.setItem('eisstock_history_v3', JSON.stringify(history));
+            applyColors();
         }
 
-        function vibrate() { if (navigator.vibrate) navigator.vibrate([150, 50, 150]); }
-        
         function updateUI() {
             let cur = history[currentIndex];
             document.getElementById('games-a').innerText = cur.ga;
             document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
             document.getElementById('games-b').innerText = cur.gb;
             document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
-            document.getElementById('display-team-a').innerText = settings.teamA;
-            document.getElementById('display-team-b').innerText = settings.teamB;
+            document.getElementById('display-team-a').innerText = settings.teamA || "TEAM A";
+            document.getElementById('display-team-b').innerText = settings.teamB || "TEAM B";
             
             if (cur.ga + cur.gb >= 3) {
                 showWinner(cur);
@@ -129,59 +158,58 @@
             saveAll();
         }
 
-        function addToHistory(nextState) {
+        function addPoints(team, stocks) {
+            let last = history[currentIndex];
+            if (last.ga + last.gb >= 3) return;
+            
+            let next = {...last};
+            if (team === 'A') {
+                let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                next.pa += earned;
+                if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
+            } else {
+                let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
+                next.pb += earned;
+                if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+            }
             history = history.slice(0, currentIndex + 1);
-            history.push(nextState);
+            history.push(next);
             currentIndex++;
             updateUI();
         }
 
-        function addPoints(team, stocks) {
-            vibrate();
-            let last = history[currentIndex];
-            let next = {...last};
-            if (last.ga + last.gb < 3) {
-                if (team === 'A') {
-                    let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-                    next.pa += earned;
-                    if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
-                } else {
-                    let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
-                    next.pb += earned;
-                    if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
-                }
-                addToHistory(next);
-            }
-        }
-
-        function undo() { vibrate(); if (currentIndex > 0) { currentIndex--; updateUI(); } }
-        function redo() { vibrate(); if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
-        
-        function softReset() {
-            vibrate();
-            let next = {ga:0, pa:0, gb:0, pb:0};
-            addToHistory(next);
-            document.getElementById('win-screen').style.display = 'none';
-        }
+        function undo() { if (currentIndex > 0) { currentIndex--; updateUI(); } }
+        function redo() { if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
+        function softReset() { history.push({ga:0, pa:0, gb:0, pb:0}); currentIndex = history.length - 1; updateUI(); }
 
         function showWinner(cur) {
-            let winner = cur.ga > cur.gb ? settings.teamA : settings.teamB;
-            let loser = cur.ga > cur.gb ? settings.teamB : settings.teamA;
-            let winScore = Math.max(cur.ga, cur.gb);
-            let loseScore = Math.min(cur.ga, cur.gb);
-            let isDreifach = (loseScore === 0);
+            let winA = cur.ga > cur.gb;
+            let winScore = winA ? cur.ga : cur.gb;
+            let loseScore = winA ? cur.gb : cur.ga;
+            let winnerName = winA ? (settings.teamA || "TEAM A") : (settings.teamB || "TEAM B");
+            let loserName = winA ? (settings.teamB || "TEAM B") : (settings.teamA || "TEAM A");
+            let winnerColor = winA ? settings.colorA : settings.colorB;
+            let loserColor = winA ? settings.colorB : settings.colorA;
             
-            document.getElementById('win-type').innerText = isDreifach ? `DREIFACH-SIEG (3:0)` : `EINFACH-SIEG (${winScore}:${loseScore})`;
-            document.getElementById('win-winner').innerText = winner + " GEWINNT!";
-            document.getElementById('win-loser-text').innerText = loser + " zahlt:";
+            let isDreifach = (loseScore === 0);
+            document.getElementById('win-type').innerText = isDreifach ? `DREIFACH-SIEG (${winScore}:${loseScore})` : `EINFACH-SIEG (${winScore}:${loseScore})`;
+            
+            let winnerEl = document.getElementById('win-winner');
+            winnerEl.innerText = winnerName + " GEWINNT!";
+            winnerEl.style.color = winnerColor;
+            
+            let loserEl = document.getElementById('win-loser-text');
+            loserEl.innerHTML = `<span style="color: ${loserColor}">${loserName}</span> zahlt:`;
+            
             document.getElementById('win-price-display').innerText = (isDreifach ? settings.betC : settings.betN).toFixed(2) + " €";
             document.getElementById('win-screen').style.display = 'block';
         }
 
         function openSettings() {
-            vibrate();
             document.getElementById('set-name-a').value = settings.teamA;
             document.getElementById('set-name-b').value = settings.teamB;
+            document.getElementById('set-color-a').value = settings.colorA;
+            document.getElementById('set-color-b').value = settings.colorB;
             document.getElementById('set-p1').value = settings.p1;
             document.getElementById('set-pNext').value = settings.pNext;
             document.getElementById('set-pWin').value = settings.pWin;
@@ -191,12 +219,11 @@
             document.getElementById('settings-screen').style.display = 'block';
         }
 
-        function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
-        
         function saveSettings() {
-            vibrate();
             settings.teamA = document.getElementById('set-name-a').value;
             settings.teamB = document.getElementById('set-name-b').value;
+            settings.colorA = document.getElementById('set-color-a').value;
+            settings.colorB = document.getElementById('set-color-b').value;
             settings.p1 = parseInt(document.getElementById('set-p1').value);
             settings.pNext = parseInt(document.getElementById('set-pNext').value);
             settings.pWin = parseInt(document.getElementById('set-pWin').value);
@@ -206,6 +233,10 @@
             document.getElementById('settings-screen').style.display = 'none';
             updateUI();
         }
+
+        function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
+        
+        applyColors();
         updateUI();
     </script>
 </body>
