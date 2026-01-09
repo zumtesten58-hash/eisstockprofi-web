@@ -80,6 +80,7 @@
         <label>Moar-Sieg bei:</label><input type="number" id="set-pWin">
         <label>Einfach-Sieg Preis (€):</label><input type="number" id="set-betN" step="0.10">
         <label>Dreifach-Sieg Preis (€):</label><input type="number" id="set-betC" step="0.10">
+        <label style="display:block; margin-top:10px;"><input type="checkbox" id="set-reset"> Gegner bei Sieg auf 0 setzen</label>
         <button class="btn-save" onclick="saveSettings()">SPEICHERN</button>
     </div>
 
@@ -94,7 +95,8 @@
     </div>
 
     <script>
-        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5};
+        // LADE SPEICHER ODER NUTZE STANDARD (Reset jetzt standardmäßig true)
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
         let history = JSON.parse(localStorage.getItem('eisstock_history')) || [{ga:0, pa:0, gb:0, pb:0}];
         let currentIndex = JSON.parse(localStorage.getItem('eisstock_index')) || 0;
 
@@ -115,7 +117,6 @@
             document.getElementById('display-team-a').innerText = settings.teamA;
             document.getElementById('display-team-b').innerText = settings.teamB;
             
-            // Partie beendet wenn SUMME der Moare = 3 ist
             if (cur.ga + cur.gb >= 3) {
                 showWinner(cur);
             } else {
@@ -128,16 +129,23 @@
             vibrate();
             let last = history[currentIndex];
             let next = {...last};
-            // Nur zählen wenn noch keine 3 Moare gespielt wurden
             if (last.ga + last.gb < 3) {
                 if (team === 'A') {
                     let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                     next.pa += earned;
-                    if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; next.pb = 0; }
+                    if (next.pa >= settings.pWin) { 
+                        next.ga++; 
+                        next.pa = 0; 
+                        if(settings.reset) next.pb = 0; 
+                    }
                 } else {
                     let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                     next.pb += earned;
-                    if (next.pb >= settings.pWin) { next.gb++; next.pa = 0; next.pb = 0; }
+                    if (next.pb >= settings.pWin) { 
+                        next.gb++; 
+                        next.pb = 0; 
+                        if(settings.reset) next.pa = 0; 
+                    }
                 }
                 history = history.slice(0, currentIndex + 1);
                 history.push(next);
@@ -160,9 +168,8 @@
         function showWinner(cur) {
             let winner = cur.ga > cur.gb ? settings.teamA : settings.teamB;
             let loser = cur.ga > cur.gb ? settings.teamB : settings.teamA;
-            let winScore = cur.ga > cur.gb ? cur.ga : cur.gb;
-            let loseScore = cur.ga > cur.gb ? cur.gb : cur.ga;
-            
+            let winScore = Math.max(cur.ga, cur.gb);
+            let loseScore = Math.min(cur.ga, cur.gb);
             let isDreifach = (loseScore === 0);
             
             document.getElementById('win-type').innerText = isDreifach ? `DREIFACH-SIEG (3:0)` : `EINFACH-SIEG (${winScore}:${loseScore})`;
@@ -181,6 +188,7 @@
             document.getElementById('set-pWin').value = settings.pWin;
             document.getElementById('set-betN').value = settings.betN;
             document.getElementById('set-betC').value = settings.betC;
+            document.getElementById('set-reset').checked = settings.reset;
             document.getElementById('settings-screen').style.display = 'block';
         }
 
@@ -195,6 +203,7 @@
             settings.pWin = parseInt(document.getElementById('set-pWin').value);
             settings.betN = parseFloat(document.getElementById('set-betN').value);
             settings.betC = parseFloat(document.getElementById('set-betC').value);
+            settings.reset = document.getElementById('set-reset').checked;
             document.getElementById('settings-screen').style.display = 'none';
             updateUI();
         }
