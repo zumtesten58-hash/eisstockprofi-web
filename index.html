@@ -92,34 +92,62 @@
         <button class="btn-save" onclick="closeWinScreen()">ZURÜCK ZUM STAND</button>
     </div>
     <script>
-        let settings = {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
-        let history = [{ga:0, pa:0, gb:0, pb:0}];
-        let currentIndex = 0;
+        let settings = JSON.parse(localStorage.getItem('eisstock_settings')) || {teamA:"TEAM A", teamB:"TEAM B", p1:6, pNext:3, pWin:12, betN:0.5, betC:1.5, reset:true};
+        let history = JSON.parse(localStorage.getItem('eisstock_history')) || [{ga:0, pa:0, gb:0, pb:0}];
+        let currentIndex = JSON.parse(localStorage.getItem('eisstock_index')) || 0;
+
+        function saveAll() {
+            localStorage.setItem('eisstock_settings', JSON.stringify(settings));
+            localStorage.setItem('eisstock_history', JSON.stringify(history));
+            localStorage.setItem('eisstock_index', JSON.stringify(currentIndex));
+        }
+
         function vibrate() { if (navigator.vibrate) navigator.vibrate([150, 50, 150]); }
+        
         function updateUI() {
             let cur = history[currentIndex];
-            document.getElementById('games-a').innerText = cur.ga; document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
-            document.getElementById('games-b').innerText = cur.gb; document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
-            document.getElementById('display-team-a').innerText = settings.teamA; document.getElementById('display-team-b').innerText = settings.teamB;
+            document.getElementById('games-a').innerText = cur.ga;
+            document.getElementById('partial-a').innerText = "TEIL: " + cur.pa;
+            document.getElementById('games-b').innerText = cur.gb;
+            document.getElementById('partial-b').innerText = "TEIL: " + cur.pb;
+            document.getElementById('display-team-a').innerText = settings.teamA;
+            document.getElementById('display-team-b').innerText = settings.teamB;
+            
             if (cur.ga + cur.gb >= 3) showWinner(cur);
+            saveAll();
         }
+
         function addPoints(team, stocks) {
-            vibrate(); let last = history[currentIndex]; let next = {...last};
-            let p1 = settings.p1, pNext = settings.pNext, pWin = settings.pWin;
+            vibrate();
+            let last = history[currentIndex];
+            let next = {...last};
             if (team === 'A') {
-                let earned = (next.pa === 0) ? p1 + (stocks-1)*pNext : stocks*pNext;
+                let earned = (next.pa === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                 next.pa += earned;
-                if (next.pa >= pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
+                if (next.pa >= settings.pWin) { next.ga++; next.pa = 0; if(settings.reset) next.pb = 0; }
             } else {
-                let earned = (next.pb === 0) ? p1 + (stocks-1)*pNext : stocks*pNext;
+                let earned = (next.pb === 0) ? settings.p1 + (stocks-1)*settings.pNext : stocks*settings.pNext;
                 next.pb += earned;
-                if (next.pb >= pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
+                if (next.pb >= settings.pWin) { next.gb++; next.pb = 0; if(settings.reset) next.pa = 0; }
             }
-            history = history.slice(0, currentIndex + 1); history.push(next); currentIndex++; updateUI();
+            history = history.slice(0, currentIndex + 1);
+            history.push(next);
+            currentIndex++;
+            updateUI();
         }
+
         function undo() { vibrate(); if (currentIndex > 0) { currentIndex--; updateUI(); } }
         function redo() { vibrate(); if (currentIndex < history.length - 1) { currentIndex++; updateUI(); } }
-        function newGame() { vibrate(); history.push({ga:0, pa:0, gb:0, pb:0}); currentIndex = history.length - 1; updateUI(); }
+        
+        function newGame() {
+            vibrate();
+            let next = {ga:0, pa:0, gb:0, pb:0};
+            history = history.slice(0, currentIndex + 1);
+            history.push(next);
+            currentIndex++;
+            updateUI();
+        }
+
         function showWinner(cur) {
             let isClean = (cur.ga === 3 || cur.gb === 3);
             let winner = cur.ga > cur.gb ? settings.teamA : settings.teamB;
@@ -130,16 +158,34 @@
             document.getElementById('win-price-display').innerText = (isClean ? settings.betC : settings.betN).toFixed(2) + " €";
             document.getElementById('win-screen').style.display = 'block';
         }
-        function openSettings() { vibrate(); document.getElementById('settings-screen').style.display = 'block'; }
+
+        function openSettings() {
+            vibrate();
+            document.getElementById('set-name-a').value = settings.teamA;
+            document.getElementById('set-name-b').value = settings.teamB;
+            document.getElementById('set-p1').value = settings.p1;
+            document.getElementById('set-pNext').value = settings.pNext;
+            document.getElementById('set-pWin').value = settings.pWin;
+            document.getElementById('set-betN').value = settings.betN;
+            document.getElementById('set-betC').value = settings.betC;
+            document.getElementById('set-reset').checked = settings.reset;
+            document.getElementById('settings-screen').style.display = 'block';
+        }
+
         function closeWinScreen() { document.getElementById('win-screen').style.display = 'none'; }
+        
         function saveSettings() {
             vibrate();
-            settings.teamA = document.getElementById('set-name-a').value; settings.teamB = document.getElementById('set-name-b').value;
-            settings.p1 = parseInt(document.getElementById('set-p1').value); settings.pNext = parseInt(document.getElementById('set-pNext').value);
+            settings.teamA = document.getElementById('set-name-a').value;
+            settings.teamB = document.getElementById('set-name-b').value;
+            settings.p1 = parseInt(document.getElementById('set-p1').value);
+            settings.pNext = parseInt(document.getElementById('set-pNext').value);
             settings.pWin = parseInt(document.getElementById('set-pWin').value);
-            settings.betN = parseFloat(document.getElementById('set-betN').value); settings.betC = parseFloat(document.getElementById('set-betC').value);
+            settings.betN = parseFloat(document.getElementById('set-betN').value);
+            settings.betC = parseFloat(document.getElementById('set-betC').value);
             settings.reset = document.getElementById('set-reset').checked;
-            document.getElementById('settings-screen').style.display = 'none'; updateUI();
+            document.getElementById('settings-screen').style.display = 'none';
+            updateUI();
         }
         updateUI();
     </script>
