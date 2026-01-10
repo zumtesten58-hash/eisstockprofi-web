@@ -36,6 +36,7 @@
         .member-list { background: #111; border-radius: 10px; padding: 10px; margin-top: 10px; border: 1px solid #222; min-height: 40px; }
         .member-item { padding: 8px; border-bottom: 1px solid #222; font-size: 14px; color: #00ff00; }
         .member-item:last-child { border: none; }
+        .check-row { display: flex; align-items: center; gap: 10px; background: #111; padding: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -95,6 +96,11 @@
             <div style="display:flex; gap:10px;"><div style="flex:1"><label class="s-label">Ziel</label><input type="number" id="set-pw" class="s-input"></div><div style="flex:1"><label class="s-label">Sieg €</label><input type="number" id="set-pe" class="s-input" step="0.1"></div></div>
             <div class="s-row"><label class="s-label">3:0 Preis €</label><input type="number" id="set-pe3" class="s-input" step="0.1"></div>
             
+            <div class="check-row">
+                <input type="checkbox" id="set-reset0" style="width:20px; height:20px;">
+                <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
+            </div>
+
             <button class="btn-save" onclick="saveSettings()">Speichern & Zurück</button>
             <button class="btn-back-main" onclick="closeSettings()">Nur Zurück</button>
             <button class="btn-danger" onclick="resetToDefaults()">Auf Werkseinstellungen zurücksetzen</button>
@@ -134,7 +140,6 @@
         let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
         localStorage.setItem('es_uid', myId);
 
-        // --- Vibration bei jedem Klick ---
         function vibrate() {
             if ("vibrate" in navigator) {
                 navigator.vibrate(200);
@@ -244,6 +249,7 @@
             document.getElementById('set-pw').value = config.pw;
             document.getElementById('set-pe').value = config.pe;
             document.getElementById('set-pe3').value = config.pe3;
+            document.getElementById('set-reset0').checked = config.r0;
             document.getElementById('settings').style.display = 'block';
         };
 
@@ -258,6 +264,7 @@
             config.pw = parseInt(document.getElementById('set-pw').value);
             config.pe = parseFloat(document.getElementById('set-pe').value);
             config.pe3 = parseFloat(document.getElementById('set-pe3').value);
+            config.r0 = document.getElementById('set-reset0').checked;
             localStorage.setItem('es_v3_cfg', JSON.stringify(config));
             if(room) update(ref(db, 'rooms/' + room), { settings: config });
             render();
@@ -283,19 +290,15 @@
             vibrate();
             const c = forced || document.getElementById('join-code').value.toUpperCase();
             if(!c) return alert("Bitte Raum-Code eingeben");
-
             let name = localStorage.getItem('es_name');
-            
             if(!name) {
-                // Falls kein Name im Speicher, frage solange ab, bis einer eingegeben wurde
                 while (!name || name.trim() === "") {
                     name = prompt("Dein Name für den Raum (erforderlich):");
-                    if (name === null) return; // Abbrechen gedrückt
+                    if (name === null) return;
                     if (!name || name.trim() === "") alert("Name darf nicht leer sein!");
                 }
                 localStorage.setItem('es_name', name);
             }
-
             update(ref(db, `rooms/${c}/members/${myId}`), { name }).then(() => {
                 room = c;
                 localStorage.setItem('es_room', room);
@@ -328,26 +331,9 @@
             });
         }
 
-        window.leaveRoom = () => {
-            vibrate();
-            remove(ref(db, `rooms/${room}/members/${myId}`));
-            localStorage.removeItem('es_room');
-            location.reload();
-        };
-
-        window.shareWhatsApp = () => {
-            vibrate();
-            const link = window.location.href.split('?')[0] + "?join=" + room;
-            window.open(`https://wa.me/?text=${encodeURIComponent("Komm in meinen Eisstock-Raum! " + link)}`);
-        };
-
-        window.setTab = (n) => {
-            vibrate();
-            document.getElementById('s1').style.display = n === 1 ? 'block' : 'none';
-            document.getElementById('s2').style.display = n === 2 ? 'block' : 'none';
-            document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab';
-            document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab';
-        };
+        window.leaveRoom = () => { vibrate(); remove(ref(db, `rooms/${room}/members/${myId}`)); localStorage.removeItem('es_room'); location.reload(); };
+        window.shareWhatsApp = () => { vibrate(); const link = window.location.href.split('?')[0] + "?join=" + room; window.open(`https://wa.me/?text=${encodeURIComponent("Komm in meinen Eisstock-Raum! " + link)}`); };
+        window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
 
         const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.get('join')) joinGame(urlParams.get('join'));
