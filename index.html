@@ -8,11 +8,11 @@
     <title>Eisstock Profi Deluxe V3</title>
     <style>
         :root { --color-a: #00BFFF; --color-b: #FF4500; --bg: #000; }
-        body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; }
-        .header { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #111; border-bottom: 2px solid #333; }
+        body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; overflow: hidden; user-select: none; touch-action: manipulation; background-image: url('hintergrund.jpg'); background-size: cover; background-position: center; }
+        .header { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: rgba(17, 17, 17, 0.8); border-bottom: 2px solid #333; }
         .btn-top { background: #222; border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
         .scoreboard { display: flex; gap: 10px; padding: 15px; height: 190px; }
-        .team-card { flex: 1; border: 4px solid; border-radius: 25px; background: linear-gradient(145deg, #0f0f0f, #1a1a1a); display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .team-card { flex: 1; border: 4px solid; border-radius: 25px; background: linear-gradient(145deg, rgba(15,15,15,0.9), rgba(26,26,26,0.9)); display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
         .big-score { font-size: 90px; font-weight: 900; line-height: 1; margin: 5px 0; }
         .small-points { font-size: 14px; font-weight: 800; text-transform: uppercase; }
         .controls { display: flex; gap: 15px; padding: 0 15px 10px; }
@@ -41,319 +41,331 @@
 </head>
 <body>
 
-    <div class="header">
-        <button class="btn-top" onclick="resetGame()">NEU SPIEL</button>
-        <div style="text-align:center">
-            <h1 style="font-size:15px; margin:0;">EISSTOCK PROFI</h1>
-            <div id="room-info" style="font-size:10px; color:var(--color-a); font-weight:bold;">LOKAL</div>
+<div class="header">
+    <button class="btn-top" onclick="resetGame()">NEU SPIEL</button>
+    <div style="text-align:center">
+        <h1 style="font-size:15px; margin:0;">EISSTOCK PROFI</h1>
+        <div id="room-info" style="font-size:10px; color:var(--color-a); font-weight:bold;">LOKAL</div>
+    </div>
+    <button class="btn-top" onclick="openSettings()">⚙️ OPTIONEN</button>
+</div>
+
+<div class="scoreboard">
+    <div class="team-card" id="card-a"><div id="disp-na" class="small-points">TEAM A</div><div id="val-ga" class="big-score">0</div><div id="val-pa" class="small-points">PUNKTE: 0</div></div>
+    <div class="team-card" id="card-b"><div id="disp-nb" class="small-points">TEAM B</div><div id="val-gb" class="big-score">0</div><div id="val-pb" class="small-points">PUNKTE: 0</div></div>
+</div>
+
+<div class="controls">
+    <div class="btn-col">
+        <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 1)">1 STOCK</button>
+        <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 2)">2 STÖCKE</button>
+        <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 3)">3 STÖCKE</button>
+        <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 4)">4 STÖCKE</button>
+    </div>
+    <div class="btn-col">
+        <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 1)">1 STOCK</button>
+        <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 2)">2 STÖCKE</button>
+        <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 3)">3 STÖCKE</button>
+        <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 4)">4 STÖCKE</button>
+    </div>
+</div>
+
+<div class="nav-footer">
+    <button class="btn-nav" id="undo" onclick="historyStep(-1)">← KORREKTUR</button>
+    <button class="btn-nav" id="redo" onclick="historyStep(1)">VORWÄRTS →</button>
+</div>
+
+<div id="win-overlay-bg" class="win-overlay-bg"></div>
+<div id="win-modal" class="win-modal">
+    <h2 id="win-label" style="margin:0; font-size:28px;">SIEG!</h2>
+    <div id="win-score-display" style="font-size:60px; font-weight:900; margin:15px 0; color:white;">0 : 0</div>
+    <p id="win-payment-text" style="font-size:20px; font-weight:bold; margin-bottom:25px;"></p>
+    <button class="btn-save" onclick="resetGame()">NEUES SPIEL</button>
+</div>
+
+<div id="settings" class="overlay">
+    <div class="tab-bar">
+        <div id="t1" class="tab active" onclick="setTab(1)">ALLGEMEIN</div>
+        <div id="t2" class="tab" onclick="setTab(2)">ONLINE</div>
+    </div>
+
+    <div id="s1" class="s-body">
+        <div class="s-row"><label class="s-label">Team A / Farbe</label><div style="display:flex; gap:10px;"><input id="set-na" class="s-input"><input type="color" id="set-ca" style="width:60px; height:45px;"></div></div>
+        <div class="s-row"><label class="s-label">Team B / Farbe</label><div style="display:flex; gap:10px;"><input id="set-nb" class="s-input"><input type="color" id="set-cb" style="width:60px; height:45px;"></div></div>
+        <div style="display:flex; gap:10px;"><div style="flex:1"><label class="s-label">1. Stock</label><input type="number" id="set-p1" class="s-input"></div><div style="flex:1"><label class="s-label">Folge</label><input type="number" id="set-pn" class="s-input"></div></div>
+        <div style="display:flex; gap:10px;"><div style="flex:1"><label class="s-label">Ziel</label><input type="number" id="set-pw" class="s-input"></div><div style="flex:1"><label class="s-label">Sieg €</label><input type="number" id="set-pe" class="s-input" step="0.1"></div></div>
+        <div class="s-row"><label class="s-label">3:0 Preis €</label><input type="number" id="set-pe3" class="s-input" step="0.1"></div>
+
+        <div class="check-row">
+            <input type="checkbox" id="set-reset0" style="width:20px; height:20px;">
+            <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
         </div>
-        <button class="btn-top" onclick="openSettings()">⚙️ OPTIONEN</button>
+
+        <button class="btn-save" onclick="saveSettings()">Speichern & Zurück</button>
+        <button class="btn-back-main" onclick="closeSettings()">Nur Zurück</button>
+        <button class="btn-danger" onclick="resetToDefaults()">Auf Werkseinstellungen zurücksetzen</button>
     </div>
 
-    <div class="scoreboard">
-        <div class="team-card" id="card-a"><div id="disp-na" class="small-points">TEAM A</div><div id="val-ga" class="big-score">0</div><div id="val-pa" class="small-points">PUNKTE: 0</div></div>
-        <div class="team-card" id="card-b"><div id="disp-nb" class="small-points">TEAM B</div><div id="val-gb" class="big-score">0</div><div id="val-pb" class="small-points">PUNKTE: 0</div></div>
-    </div>
-
-    <div class="controls">
-        <div class="btn-col">
-            <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 1)">1 STOCK</button>
-            <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 2)">2 STÖCKE</button>
-            <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 3)">3 STÖCKE</button>
-            <button class="btn-stock" style="background:var(--color-a)" onclick="addStock('A', 4)">4 STÖCKE</button>
-        </div>
-        <div class="btn-col">
-            <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 1)">1 STOCK</button>
-            <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 2)">2 STÖCKE</button>
-            <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 3)">3 STÖCKE</button>
-            <button class="btn-stock" style="background:var(--color-b)" onclick="addStock('B', 4)">4 STÖCKE</button>
-        </div>
-    </div>
-
-    <div class="nav-footer">
-        <button class="btn-nav" id="undo" onclick="historyStep(-1)">← KORREKTUR</button>
-        <button class="btn-nav" id="redo" onclick="historyStep(1)">VORWÄRTS →</button>
-    </div>
-
-    <div id="win-overlay-bg" class="win-overlay-bg"></div>
-    <div id="win-modal" class="win-modal">
-        <h2 id="win-label" style="margin:0; font-size:28px;">SIEG!</h2>
-        <div id="win-score-display" style="font-size:60px; font-weight:900; margin:15px 0; color:white;">0 : 0</div>
-        <p id="win-payment-text" style="font-size:20px; font-weight:bold; margin-bottom:25px;"></p>
-        <button class="btn-save" onclick="resetGame()">NEUES SPIEL</button>
-    </div>
-
-    <div id="settings" class="overlay">
-        <div class="tab-bar">
-            <div id="t1" class="tab active" onclick="setTab(1)">ALLGEMEIN</div>
-            <div id="t2" class="tab" onclick="setTab(2)">ONLINE</div>
-        </div>
-        
-        <div id="s1" class="s-body">
-            <div class="s-row"><label class="s-label">Team A / Farbe</label><div style="display:flex; gap:10px;"><input id="set-na" class="s-input"><input type="color" id="set-ca" style="width:60px; height:45px;"></div></div>
-            <div class="s-row"><label class="s-label">Team B / Farbe</label><div style="display:flex; gap:10px;"><input id="set-nb" class="s-input"><input type="color" id="set-cb" style="width:60px; height:45px;"></div></div>
-            <div style="display:flex; gap:10px;"><div style="flex:1"><label class="s-label">1. Stock</label><input type="number" id="set-p1" class="s-input"></div><div style="flex:1"><label class="s-label">Folge</label><input type="number" id="set-pn" class="s-input"></div></div>
-            <div style="display:flex; gap:10px;"><div style="flex:1"><label class="s-label">Ziel</label><input type="number" id="set-pw" class="s-input"></div><div style="flex:1"><label class="s-label">Sieg €</label><input type="number" id="set-pe" class="s-input" step="0.1"></div></div>
-            <div class="s-row"><label class="s-label">3:0 Preis €</label><input type="number" id="set-pe3" class="s-input" step="0.1"></div>
+    <div id="s2" class="s-body" style="display:none">
+        <div id="online-setup">
+            <label class="s-label">DEIN NAME (Wichtig für Online):</label>
+            <input id="user-name" class="s-input" placeholder="Name eingeben..." oninput="updateMyName(this.value)">
             
-            <div class="check-row">
-                <input type="checkbox" id="set-reset0" style="width:20px; height:20px;">
-                <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
-            </div>
-
-            <button class="btn-save" onclick="saveSettings()">Speichern & Zurück</button>
-            <button class="btn-back-main" onclick="closeSettings()">Nur Zurück</button>
-            <button class="btn-danger" onclick="resetToDefaults()">Auf Werkseinstellungen zurücksetzen</button>
-        </div>
-        
-        <div id="s2" class="s-body" style="display:none">
-            <div id="online-setup">
-                <input id="user-name" class="s-input" placeholder="Dein Name...">
-                <button class="btn-save" style="margin-top:10px; background:var(--color-a);" onclick="hostGame()">RAUM ERSTELLEN</button>
-                <div style="display:flex; gap:5px; margin-top:10px;"><input id="join-code" class="s-input" placeholder="CODE"><button class="btn-top" onclick="joinGame()">JOIN</button></div>
-            </div>
+            <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
             
-            <div id="online-active" style="display:none;">
-                <h1 id="room-code-display" style="font-size:50px; color:#00ff00; text-align:center; margin:0;">-----</h1>
-                <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin:15px 0;">WhatsApp Einladung</button>
-                <div class="s-label">SPIELER IM RAUM:</div>
-                <div id="member-list" class="member-list"></div>
-                <button class="btn-danger" onclick="leaveRoom()" style="width:100%; margin-top:20px;">RAUM VERLASSEN</button>
+            <button class="btn-save" style="background:var(--color-a);" onclick="hostGame()">RAUM ERSTELLEN</button>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <input id="join-code" class="s-input" placeholder="CODE" oninput="this.value = this.value.toUpperCase()">
+                <button class="btn-top" style="height:48px;" onclick="joinGame()">JOIN</button>
             </div>
-
-            <button class="btn-save" style="margin-top:20px; background:var(--color-a);" onclick="closeSettings()">ZUM SPIEL</button>
         </div>
+
+        <div id="online-active" style="display:none;">
+            <h1 id="room-code-display" style="font-size:50px; color:#00ff00; text-align:center; margin:0;">-----</h1>
+            <button onclick="shareWhatsApp()" style="width:100%; background:#25D366; color:white; border:none; padding:15px; border-radius:30px; font-weight:bold; margin:15px 0;">WhatsApp Einladung</button>
+            <div class="s-label">SPIELER IM RAUM:</div>
+            <div id="member-list" class="member-list"></div>
+            <button class="btn-danger" onclick="leaveRoom()" style="width:100%; margin-top:20px;">RAUM VERLASSEN</button>
+        </div>
+
+        <button class="btn-save" style="margin-top:20px; background:var(--color-a);" onclick="closeSettings()">ZUM SPIEL</button>
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U", authDomain: "eisstock-live.firebaseapp.com", projectId: "eisstock-live", databaseURL: "https://eisstock-live-default-rtdb.europe-west1.firebasedatabase.app" };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+    const firebaseConfig = {
+        apiKey: "AIzaSyB6J-4EwyyxuvL8L4kJsfLYBwhnd0xOX2U",
+        authDomain: "eisstock-live.firebaseapp.com",
+        databaseURL: "https://eisstock-live-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "eisstock-live",
+        storageBucket: "eisstock-live.firebasestorage.app",
+        messagingSenderId: "201538137304",
+        appId: "1:201538137304:web:78362c30c45c006cb63bad",
+        measurementId: "G-0G8RJF9LK2"
+    };
 
-        const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true };
-        let config = JSON.parse(localStorage.getItem('es_v3_cfg')) || {...DEFAULTS};
-        let state = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
-        let room = localStorage.getItem('es_room');
-        let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('es_uid', myId);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let analytics = null;
 
-        function vibrate() {
-            if ("vibrate" in navigator) {
-                navigator.vibrate(200);
-            }
-        }
-
-        function updateHistory(n) {
-            let h = n.history || [];
-            let idx = n.hIdx ?? -1;
-            const currentState = { ga: n.ga, pa: n.pa, gb: n.gb, pb: n.pb, win: n.win };
-            h = h.slice(0, idx + 1);
-            h.push(currentState);
-            if(h.length > 20) h.shift();
-            n.history = h;
-            n.hIdx = h.length - 1;
-            return n;
-        }
-
-        window.addStock = (team, count) => {
-            vibrate();
-            if(state.win) return;
-            let n = JSON.parse(JSON.stringify(state));
-            let val = (team === 'A') ? n.pa : n.pb;
-            let p = (val === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
-            
-            if(team === 'A') {
-                n.pa += p;
-                if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.r0) n.pb = 0; }
+    // --- ANALYTICS DISKRET ---
+    const consent = localStorage.getItem('es_analytics');
+    if (consent === 'true') {
+        analytics = getAnalytics(app);
+    } else if (consent === null) {
+        setTimeout(() => {
+            if(confirm("Darf Eisstock Profi anonyme Daten sammeln, um die App zu verbessern?")) {
+                localStorage.setItem('es_analytics', 'true');
+                analytics = getAnalytics(app);
+                logEvent(analytics, 'consent_given');
             } else {
-                n.pb += p;
-                if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.r0) n.pa = 0; }
+                localStorage.setItem('es_analytics', 'false');
             }
-            if((n.ga + n.gb) === 3) n.win = true;
-            broadcast(updateHistory(n));
-        };
+        }, 3000);
+    }
 
-        window.historyStep = (dir) => {
-            vibrate();
-            let n = JSON.parse(JSON.stringify(state));
-            let newIdx = (n.hIdx || 0) + dir;
-            if(n.history && n.history[newIdx]) {
-                const past = n.history[newIdx];
-                n.ga = past.ga; n.pa = past.pa; n.gb = past.gb; n.pb = past.pb; n.win = past.win;
-                n.hIdx = newIdx;
-                broadcast(n);
-            }
-        };
+    const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true };
+    let config = JSON.parse(localStorage.getItem('es_v3_cfg')) || {...DEFAULTS};
+    let state = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
+    let room = localStorage.getItem('es_room');
+    let myId = localStorage.getItem('es_uid') || Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('es_uid', myId);
 
-        function broadcast(n) {
-            n.ts = Date.now();
-            if(room) {
-                update(ref(db, 'rooms/' + room), { state: n });
-            } else {
-                state = n;
-                render();
-            }
+    function vibrate() { if ("vibrate" in navigator) navigator.vibrate(200); }
+
+    window.updateMyName = (val) => {
+        localStorage.setItem('es_name', val);
+        if(room) update(ref(db, `rooms/${room}/members/${myId}`), { name: val });
+    };
+
+    function updateHistory(n) {
+        let h = n.history || [];
+        let idx = n.hIdx ?? -1;
+        const currentState = { ga: n.ga, pa: n.pa, gb: n.gb, pb: n.pb, win: n.win };
+        h = h.slice(0, idx + 1);
+        h.push(currentState);
+        if(h.length > 20) h.shift();
+        n.history = h;
+        n.hIdx = h.length - 1;
+        return n;
+    }
+
+    window.addStock = (team, count) => {
+        vibrate();
+        if(state.win) return;
+        let n = JSON.parse(JSON.stringify(state));
+        let val = (team === 'A') ? n.pa : n.pb;
+        let p = (val === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
+        if(team === 'A') { n.pa += p; if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.r0) n.pb = 0; } }
+        else { n.pb += p; if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.r0) n.pa = 0; } }
+        if(n.ga >= 3 || n.gb >= 3) n.win = true;
+        if(analytics) logEvent(analytics, 'add_stock', { team, count });
+        broadcast(updateHistory(n));
+    };
+
+    window.historyStep = (dir) => {
+        vibrate();
+        let n = JSON.parse(JSON.stringify(state));
+        let newIdx = (n.hIdx || 0) + dir;
+        if(n.history && n.history[newIdx]) {
+            const past = n.history[newIdx];
+            n.ga = past.ga; n.pa = past.pa; n.gb = past.gb; n.pb = past.pb; n.win = past.win;
+            n.hIdx = newIdx;
+            broadcast(n);
         }
+    };
 
-        window.render = () => {
-            document.getElementById('val-ga').innerText = state.ga;
-            document.getElementById('val-gb').innerText = state.gb;
-            document.getElementById('val-pa').innerText = "PUNKTE: " + state.pa;
-            document.getElementById('val-pb').innerText = "PUNKTE: " + state.pb;
-            document.getElementById('disp-na').innerText = config.na;
-            document.getElementById('disp-nb').innerText = config.nb;
-            document.getElementById('card-a').style.borderColor = config.ca;
-            document.getElementById('card-b').style.borderColor = config.cb;
-            document.documentElement.style.setProperty('--color-a', config.ca);
-            document.documentElement.style.setProperty('--color-b', config.cb);
+    function broadcast(n) {
+        n.ts = Date.now();
+        if(room) update(ref(db, 'rooms/' + room), { state: n });
+        else { state = n; render(); }
+    }
 
-            if(state.win) {
-                const isTriple = (state.ga === 3 || state.gb === 3) && (state.ga === 0 || state.gb === 0);
-                
-                // Bestimmung Gewinner/Verlierer für Name und Farbe
-                const winA = state.ga > state.gb;
-                const winName = winA ? config.na : config.nb;
-                const winColor = winA ? config.ca : config.cb;
-                const loseName = winA ? config.nb : config.na;
-                const loseColor = winA ? config.cb : config.ca;
-
-                const winLabel = document.getElementById('win-label');
-                winLabel.innerText = winName + " GEWINNT!";
-                winLabel.style.color = winColor;
-
-                const payText = document.getElementById('win-payment-text');
-                const amount = (isTriple ? config.pe3 : config.pe).toFixed(2);
-                payText.innerText = loseName + " zahlt " + amount + " €";
-                payText.style.color = loseColor;
-
-                document.getElementById('win-score-display').innerText = state.ga + " : " + state.gb;
-                document.getElementById('win-modal').style.display = 'block';
-                document.getElementById('win-overlay-bg').style.display = 'block';
-            } else {
-                document.getElementById('win-modal').style.display = 'none';
-                document.getElementById('win-overlay-bg').style.display = 'none';
-            }
-        };
-
-        window.resetGame = () => {
-            vibrate();
-            let n = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
-            broadcast(updateHistory(n));
-        };
-
-        window.resetToDefaults = () => {
-            vibrate();
-            if(confirm("Alle lokalen Daten löschen und Werkseinstellungen laden?")) {
-                localStorage.clear();
-                window.location.href = window.location.pathname; 
-            }
-        };
-
-        window.openSettings = () => {
-            vibrate();
-            document.getElementById('set-na').value = config.na;
-            document.getElementById('set-nb').value = config.nb;
-            document.getElementById('set-ca').value = config.ca;
-            document.getElementById('set-cb').value = config.cb;
-            document.getElementById('set-p1').value = config.p1;
-            document.getElementById('set-pn').value = config.pn;
-            document.getElementById('set-pw').value = config.pw;
-            document.getElementById('set-pe').value = config.pe;
-            document.getElementById('set-pe3').value = config.pe3;
-            document.getElementById('set-reset0').checked = config.r0;
-            document.getElementById('settings').style.display = 'block';
-        };
-
-        window.saveSettings = () => {
-            vibrate();
-            config.na = document.getElementById('set-na').value;
-            config.nb = document.getElementById('set-nb').value;
-            config.ca = document.getElementById('set-ca').value;
-            config.cb = document.getElementById('set-cb').value;
-            config.p1 = parseInt(document.getElementById('set-p1').value);
-            config.pn = parseInt(document.getElementById('set-pn').value);
-            config.pw = parseInt(document.getElementById('set-pw').value);
-            config.pe = parseFloat(document.getElementById('set-pe').value);
-            config.pe3 = parseFloat(document.getElementById('set-pe3').value);
-            config.r0 = document.getElementById('set-reset0').checked;
-            localStorage.setItem('es_v3_cfg', JSON.stringify(config));
-            if(room) update(ref(db, 'rooms/' + room), { settings: config });
-            render();
-            closeSettings();
-        };
-
-        window.closeSettings = () => { vibrate(); document.getElementById('settings').style.display = 'none'; };
-
-        window.hostGame = () => {
-            vibrate();
-            const name = document.getElementById('user-name').value;
-            if(!name) return alert("Bitte Name eingeben");
-            const newRoom = Math.random().toString(36).substr(2, 5).toUpperCase();
-            let initialState = updateHistory({ ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 });
-            set(ref(db, 'rooms/' + newRoom), { state: initialState, settings: config, members: {[myId]: {name}}, date: new Date().toLocaleDateString() });
-            room = newRoom;
-            localStorage.setItem('es_room', room);
-            localStorage.setItem('es_name', name);
-            initSession();
-        };
-
-        window.joinGame = (forced) => {
-            vibrate();
-            const c = forced || document.getElementById('join-code').value.toUpperCase();
-            if(!c) return alert("Bitte Raum-Code eingeben");
-            let name = localStorage.getItem('es_name');
-            if(!name) {
-                while (!name || name.trim() === "") {
-                    name = prompt("Dein Name für den Raum (erforderlich):");
-                    if (name === null) return;
-                    if (!name || name.trim() === "") alert("Name darf nicht leer sein!");
-                }
-                localStorage.setItem('es_name', name);
-            }
-            update(ref(db, `rooms/${c}/members/${myId}`), { name }).then(() => {
-                room = c;
-                localStorage.setItem('es_room', room);
-                initSession();
-            }).catch(() => alert("Raum nicht gefunden!"));
-        };
-
-        function initSession() {
-            if(!room) return;
-            document.getElementById('online-setup').style.display = 'none';
-            document.getElementById('online-active').style.display = 'block';
-            document.getElementById('room-code-display').innerText = room;
-            document.getElementById('room-info').innerText = "ONLINE: " + room;
-            onValue(ref(db, 'rooms/' + room), (snap) => {
-                const data = snap.val();
-                if(!data) return;
-                state = data.state;
-                config = data.settings;
-                const list = document.getElementById('member-list');
-                list.innerHTML = "";
-                if(data.members) {
-                    Object.values(data.members).forEach(m => {
-                        let div = document.createElement('div');
-                        div.className = "member-item";
-                        div.innerText = "👤 " + m.name;
-                        list.appendChild(div);
-                    });
-                }
-                render();
-            });
+    window.render = () => {
+        document.getElementById('val-ga').innerText = state.ga;
+        document.getElementById('val-gb').innerText = state.gb;
+        document.getElementById('val-pa').innerText = "PUNKTE: " + state.pa;
+        document.getElementById('val-pb').innerText = "PUNKTE: " + state.pb;
+        document.getElementById('disp-na').innerText = config.na;
+        document.getElementById('disp-nb').innerText = config.nb;
+        document.getElementById('card-a').style.borderColor = config.ca;
+        document.getElementById('card-b').style.borderColor = config.cb;
+        document.documentElement.style.setProperty('--color-a', config.ca);
+        document.documentElement.style.setProperty('--color-b', config.cb);
+        if(state.win) {
+            const winA = state.ga >= 3;
+            const isTriple = (state.ga === 3 || state.gb === 3) && (state.ga === 0 || state.gb === 0);
+            document.getElementById('win-label').innerText = (winA ? config.na : config.nb) + " GEWINNT!";
+            document.getElementById('win-label').style.color = winA ? config.ca : config.cb;
+            const amount = (isTriple ? config.pe3 : config.pe).toFixed(2);
+            document.getElementById('win-payment-text').innerText = (winA ? config.nb : config.na) + " zahlt " + amount + " €";
+            document.getElementById('win-score-display').innerText = state.ga + " : " + state.gb;
+            document.getElementById('win-modal').style.display = 'block';
+            document.getElementById('win-overlay-bg').style.display = 'block';
+        } else {
+            document.getElementById('win-modal').style.display = 'none';
+            document.getElementById('win-overlay-bg').style.display = 'none';
         }
+    };
 
-        window.leaveRoom = () => { vibrate(); remove(ref(db, `rooms/${room}/members/${myId}`)); localStorage.removeItem('es_room'); location.reload(); };
-        window.shareWhatsApp = () => { vibrate(); const link = window.location.href.split('?')[0] + "?join=" + room; window.open(`https://wa.me/?text=${encodeURIComponent("Komm in meinen Eisstock-Raum! " + link)}`); };
-        window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
+    window.resetGame = () => {
+        vibrate();
+        let n = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
+        broadcast(updateHistory(n));
+    };
 
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.get('join')) joinGame(urlParams.get('join'));
-        else if(room) initSession();
-        if(state.hIdx === -1) state = updateHistory(state);
+    window.resetToDefaults = () => {
+        vibrate();
+        config = {...DEFAULTS};
+        localStorage.setItem('es_v3_cfg', JSON.stringify(config));
         render();
-    </script>
+        openSettings();
+    };
+
+    window.openSettings = () => {
+        vibrate();
+        document.getElementById('set-na').value = config.na;
+        document.getElementById('set-nb').value = config.nb;
+        document.getElementById('set-ca').value = config.ca;
+        document.getElementById('set-cb').value = config.cb;
+        document.getElementById('set-p1').value = config.p1;
+        document.getElementById('set-pn').value = config.pn;
+        document.getElementById('set-pw').value = config.pw;
+        document.getElementById('set-pe').value = config.pe;
+        document.getElementById('set-pe3').value = config.pe3;
+        document.getElementById('set-reset0').checked = config.r0;
+        document.getElementById('user-name').value = localStorage.getItem('es_name') || "";
+        document.getElementById('settings').style.display = 'block';
+    };
+
+    window.saveSettings = () => {
+        vibrate();
+        config.na = document.getElementById('set-na').value;
+        config.nb = document.getElementById('set-nb').value;
+        config.ca = document.getElementById('set-ca').value;
+        config.cb = document.getElementById('set-cb').value;
+        config.p1 = parseInt(document.getElementById('set-p1').value);
+        config.pn = parseInt(document.getElementById('set-pn').value);
+        config.pw = parseInt(document.getElementById('set-pw').value);
+        config.pe = parseFloat(document.getElementById('set-pe').value);
+        config.pe3 = parseFloat(document.getElementById('set-pe3').value);
+        config.r0 = document.getElementById('set-reset0').checked;
+        localStorage.setItem('es_v3_cfg', JSON.stringify(config));
+        if(room) update(ref(db, 'rooms/' + room), { settings: config });
+        render();
+        closeSettings();
+    };
+
+    window.closeSettings = () => { vibrate(); document.getElementById('settings').style.display = 'none'; };
+
+    window.hostGame = () => {
+        vibrate();
+        let name = localStorage.getItem('es_name');
+        if(!name || name.trim() === "") name = prompt("Bitte gib einen Namen ein:");
+        if(!name) return;
+        localStorage.setItem('es_name', name);
+        const newRoom = Math.random().toString(36).substr(2, 5).toUpperCase();
+        let initialState = updateHistory({ ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 });
+        set(ref(db, 'rooms/' + newRoom), { state: initialState, settings: config, members: {[myId]: {name}} });
+        room = newRoom;
+        localStorage.setItem('es_room', room);
+        initSession();
+    };
+
+    window.joinGame = (forcedCode) => {
+        vibrate();
+        const c = (typeof forcedCode === 'string' ? forcedCode : document.getElementById('join-code').value).trim().toUpperCase();
+        if(!c || c === "") return;
+        let name = localStorage.getItem('es_name');
+        if(!name || name.trim() === "") name = prompt("Dein Name für den Raum:");
+        if(!name) return;
+        localStorage.setItem('es_name', name);
+        update(ref(db, `rooms/${c}/members/${myId}`), { name }).then(() => {
+            room = c;
+            localStorage.setItem('es_room', room);
+            initSession();
+            document.getElementById('settings').style.display = 'none';
+        }).catch(() => alert("Raum nicht gefunden!"));
+    };
+
+    function initSession() {
+        if(!room) return;
+        document.getElementById('online-setup').style.display = 'none';
+        document.getElementById('online-active').style.display = 'block';
+        document.getElementById('room-code-display').innerText = room;
+        document.getElementById('room-info').innerText = "ONLINE: " + room;
+        onValue(ref(db, 'rooms/' + room), (snap) => {
+            const data = snap.val(); if(!data) return;
+            state = data.state; config = data.settings;
+            const list = document.getElementById('member-list'); list.innerHTML = "";
+            if(data.members) Object.values(data.members).forEach(m => {
+                let div = document.createElement('div'); div.className = "member-item"; div.innerText = "👤 " + m.name; list.appendChild(div);
+            });
+            render();
+        });
+    }
+
+    window.leaveRoom = () => { vibrate(); remove(ref(db, `rooms/${room}/members/${myId}`)); localStorage.removeItem('es_room'); location.reload(); };
+
+    window.shareWhatsApp = () => {
+        vibrate();
+        const shareLink = window.location.origin + window.location.pathname + "?join=" + room;
+        const message = "Komm in meinen Eisstock-Raum! " + shareLink;
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    };
+
+    window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinCode = urlParams.get('join');
+    if(joinCode) joinGame(joinCode);
+    else if(room) initSession();
+    if(state.hIdx === -1) state = updateHistory(state);
+    render();
+</script>
 </body>
 </html>
