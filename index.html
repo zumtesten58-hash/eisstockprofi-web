@@ -77,9 +77,9 @@
 
     <div id="win-overlay-bg" class="win-overlay-bg"></div>
     <div id="win-modal" class="win-modal">
-        <h2 id="win-label" style="color:red; margin:0; font-size:28px;">SIEG!</h2>
+        <h2 id="win-label" style="margin:0; font-size:28px;">SIEG!</h2>
         <div id="win-score-display" style="font-size:60px; font-weight:900; margin:15px 0; color:white;">0 : 0</div>
-        <p id="win-payment-text" style="font-size:20px; color:#00ff00; font-weight:bold; margin-bottom:25px;"></p>
+        <p id="win-payment-text" style="font-size:20px; font-weight:bold; margin-bottom:25px;"></p>
         <button class="btn-save" onclick="resetGame()">NEUES SPIEL</button>
     </div>
 
@@ -212,10 +212,24 @@
 
             if(state.win) {
                 const isTriple = (state.ga === 3 || state.gb === 3) && (state.ga === 0 || state.gb === 0);
-                const winner = state.ga > state.gb ? config.na : config.nb;
-                document.getElementById('win-label').innerText = winner + " GEWINNT!";
+                
+                // Bestimmung Gewinner/Verlierer für Name und Farbe
+                const winA = state.ga > state.gb;
+                const winName = winA ? config.na : config.nb;
+                const winColor = winA ? config.ca : config.cb;
+                const loseName = winA ? config.nb : config.na;
+                const loseColor = winA ? config.cb : config.ca;
+
+                const winLabel = document.getElementById('win-label');
+                winLabel.innerText = winName + " GEWINNT!";
+                winLabel.style.color = winColor;
+
+                const payText = document.getElementById('win-payment-text');
+                const amount = (isTriple ? config.pe3 : config.pe).toFixed(2);
+                payText.innerText = loseName + " zahlt " + amount + " €";
+                payText.style.color = loseColor;
+
                 document.getElementById('win-score-display').innerText = state.ga + " : " + state.gb;
-                document.getElementById('win-payment-text').innerText = "Verlierer zahlt " + (isTriple ? config.pe3 : config.pe).toFixed(2) + " €";
                 document.getElementById('win-modal').style.display = 'block';
                 document.getElementById('win-overlay-bg').style.display = 'block';
             } else {
