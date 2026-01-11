@@ -450,7 +450,12 @@
         });
     }
 
-    window.leaveRoom = () => { vibrate(); remove(ref(db, `rooms/${room}/members/${myId}`)); localStorage.removeItem('es_room'); location.reload(); };
+    window.leaveRoom = () => { 
+    vibrate(); 
+    remove(ref(db, `rooms/${room}/members/${myId}`)); 
+    localStorage.removeItem('es_room'); 
+    window.location.href = window.location.origin + window.location.pathname; 
+};location.reload(); };
 
     // --- NEUE WHATSAPP & TEILEN FUNKTION ---
     window.shareWhatsApp = () => {
@@ -497,3 +502,4 @@
 </script>
 </body>
 </html>
+
