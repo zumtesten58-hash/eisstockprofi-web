@@ -451,11 +451,11 @@
     }
 
     window.leaveRoom = () => { 
-    vibrate(); 
-    remove(ref(db, `rooms/${room}/members/${myId}`)); 
-    localStorage.removeItem('es_room'); 
-    window.location.href = window.location.origin + window.location.pathname; 
-};location.reload(); };
+        vibrate(); 
+        remove(ref(db, `rooms/${room}/members/${myId}`)); 
+        localStorage.removeItem('es_room'); 
+        window.location.href = window.location.origin + window.location.pathname; 
+    };
 
     // --- NEUE WHATSAPP & TEILEN FUNKTION ---
     window.shareWhatsApp = () => {
@@ -502,4 +502,5 @@
 </script>
 </body>
 </html>
+
 
