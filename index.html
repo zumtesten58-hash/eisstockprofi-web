@@ -457,35 +457,24 @@
         window.location.href = window.location.origin + window.location.pathname; 
     };
 
-    // --- NEUE WHATSAPP & TEILEN FUNKTION ---
     window.shareWhatsApp = () => {
         vibrate();
         
-        // Generiert den Link dynamisch basierend auf der aktuellen URL (egal ob GitHub oder Localhost)
-        const baseUrl = window.location.origin + window.location.pathname;
-        const inviteLink = `${baseUrl}?join=${room}`;
-        const message = `Komm in meinen Eisstock-Raum!\nCode: ${room}\nLink: ${inviteLink}`;
+        // Die Basis-Adresse deiner Seite
+        const baseUrl = "https://zumtesten58-hash.github.io/eisstockprofi-web/";
+        
+        // room ist z.B. "6KH-Cdt!"
+        // encodeURIComponent macht daraus "6KH-Cdt%21" -> damit WhatsApp den Link nicht abbricht
+        const inviteLink = baseUrl + "?join=" + encodeURIComponent(room);
+        
+        // Wir bauen den Text zusammen
+        const message = "Komm in meinen Eisstock-Raum!\n\nCode: " + room + "\nLink: " + inviteLink;
 
-        // 1. Priorität: Android Native Interface (Falls als App verpackt)
-        if (window.AndroidInterface && window.AndroidInterface.shareToWhatsApp) {
-            window.AndroidInterface.shareToWhatsApp(message);
-            return;
-        }
-
-        // 2. Priorität: Web Share API (Modernes Teilen-Menü auf Handys)
-        if (navigator.share) {
-            navigator.share({
-                title: 'Eisstock Profi Einladung',
-                text: message,
-                url: inviteLink
-            }).catch(console.error);
-            return;
-        }
-
-        // 3. Fallback: Direkter WhatsApp Web Link
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        // Hier wird NUR WhatsApp aufgerufen. 
+        // Wir verpacken die ganze Nachricht nochmal in encodeURIComponent, 
+        // damit auch Zeilenumbrüche korrekt an WhatsApp übergeben werden.
+        window.open("https://wa.me/?text=" + encodeURIComponent(message), '_blank');
     };
-
     window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -502,5 +491,6 @@
 </script>
 </body>
 </html>
+
 
 
