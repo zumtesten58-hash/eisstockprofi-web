@@ -459,21 +459,34 @@
 
     window.shareWhatsApp = () => {
         vibrate();
-        
-        // Die Basis-Adresse deiner Seite
-        const baseUrl = "https://zumtesten58-hash.github.io/eisstockprofi-web/";
-        
-        // room ist z.B. "6KH-Cdt!"
-        // encodeURIComponent macht daraus "6KH-Cdt%21" -> damit WhatsApp den Link nicht abbricht
-        const inviteLink = baseUrl + "?join=" + encodeURIComponent(room);
-        
-        // Wir bauen den Text zusammen
-        const message = "Komm in meinen Eisstock-Raum!\n\nCode: " + room + "\nLink: " + inviteLink;
 
-        // Hier wird NUR WhatsApp aufgerufen. 
-        // Wir verpacken die ganze Nachricht nochmal in encodeURIComponent, 
-        // damit auch Zeilenumbrüche korrekt an WhatsApp übergeben werden.
-        window.open("https://wa.me/?text=" + encodeURIComponent(message), '_blank');
+        const webUrl = "https://zumtesten58-hash.github.io/eisstockprofi-web/";
+
+        // Die "Sicherheits-Maschine": Verwandelt jedes Sonderzeichen in %-Code
+        const superEncode = (str) => {
+            return str.split('').map(char => {
+                if (/[a-zA-Z0-9]/.test(char)) return char;
+                const hex = char.charCodeAt(0).toString(16).toUpperCase();
+                return '%' + (hex.length < 2 ? '0' + hex : hex);
+            }).join('');
+        };
+
+        const encodedRoom = superEncode(room);
+        const inviteLink = webUrl + "?join=" + encodedRoom;
+
+        // Die Nachricht mit Fettschrift (*...*) für WhatsApp
+        const message = "*Komm in meine Eisstockgruppe* \n\n" +
+                        "Code: *" + room + "*\n" +
+                        "Hier beitreten: " + inviteLink;
+
+        if (window.AndroidInterface && window.AndroidInterface.shareToWhatsApp) {
+            // Android App Interface
+            window.AndroidInterface.shareToWhatsApp(message);
+        } else {
+            // Normale Webseite (direkt zu WhatsApp)
+            const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+            window.open(whatsappUrl, '_blank');
+        }
     };
     window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
 
@@ -491,6 +504,7 @@
 </script>
 </body>
 </html>
+
 
 
 
