@@ -112,6 +112,11 @@
             <input type="checkbox" id="set-reset0" style="width:20px; height:20px;">
             <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
         </div>
+        
+        <div class="check-row">
+            <input type="checkbox" id="set-openend" style="width:20px; height:20px;">
+            <label style="font-size:14px; font-weight:bold;">Über Ziel hinaus spielen (Open End)</label>
+        </div>
 
         <button class="btn-save" onclick="saveSettings()">Speichern & Zurück</button>
         <button class="btn-back-main" onclick="closeSettings()">Nur Zurück</button>
@@ -173,7 +178,8 @@
         return result;
     }
 
-    const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true };
+    // Default Config mit neuem Feld oe (open end)
+    const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true, oe: false };
     let config = JSON.parse(localStorage.getItem('es_v3_cfg')) || {...DEFAULTS};
     let state = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
     let room = localStorage.getItem('es_room');
@@ -239,9 +245,27 @@
         let n = JSON.parse(JSON.stringify(state));
         let val = (team === 'A') ? n.pa : n.pb;
         let p = (val === 0) ? parseInt(config.p1) + (count-1)*parseInt(config.pn) : count*parseInt(config.pn);
-        if(team === 'A') { n.pa += p; if(n.pa >= config.pw) { n.ga++; n.pa = 0; if(config.r0) n.pb = 0; } }
-        else { n.pb += p; if(n.pb >= config.pw) { n.gb++; n.pb = 0; if(config.r0) n.pa = 0; } }
-        if((n.ga + n.gb) === 3 || n.ga >= 3 || n.gb >= 3) n.win = true;
+        
+        if(team === 'A') { 
+            n.pa += p; 
+            // Siegprüfung nur wenn OPEN END deaktiviert ist
+            if(!config.oe && n.pa >= config.pw) { 
+                n.ga++; n.pa = 0; if(config.r0) n.pb = 0; 
+            } 
+        }
+        else { 
+            n.pb += p; 
+            // Siegprüfung nur wenn OPEN END deaktiviert ist
+            if(!config.oe && n.pb >= config.pw) { 
+                n.gb++; n.pb = 0; if(config.r0) n.pa = 0; 
+            } 
+        }
+        
+        // Spielende Logik
+        if(!config.oe) {
+            if((n.ga + n.gb) === 3 || n.ga >= 3 || n.gb >= 3) n.win = true;
+        }
+        
         broadcast(updateHistory(n));
     };
 
@@ -310,7 +334,7 @@
 
     window.resetToDefaults = () => {
         vibrate();
-        config = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true };
+        config = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true, oe: false };
         localStorage.setItem('es_v3_cfg', JSON.stringify(config));
         render();
         openSettings();
@@ -328,9 +352,9 @@
         document.getElementById('set-pe').value = config.pe;
         document.getElementById('set-pe3').value = config.pe3;
         document.getElementById('set-reset0').checked = config.r0;
+        document.getElementById('set-openend').checked = config.oe || false;
         
         document.getElementById('user-name').value = localStorage.getItem('es_name') || "";
-        
         document.getElementById('settings').style.display = 'block';
     };
 
@@ -346,6 +370,8 @@
         config.pe = parseFloat(document.getElementById('set-pe').value);
         config.pe3 = parseFloat(document.getElementById('set-pe3').value);
         config.r0 = document.getElementById('set-reset0').checked;
+        config.oe = document.getElementById('set-openend').checked;
+        
         localStorage.setItem('es_v3_cfg', JSON.stringify(config));
 
         if(room) {
@@ -462,7 +488,6 @@
 
         const webUrl = "https://zumtesten58-hash.github.io/eisstockprofi-web/";
 
-        // Die "Sicherheits-Maschine": Verwandelt jedes Sonderzeichen in %-Code
         const superEncode = (str) => {
             return str.split('').map(char => {
                 if (/[a-zA-Z0-9]/.test(char)) return char;
@@ -474,16 +499,13 @@
         const encodedRoom = superEncode(room);
         const inviteLink = webUrl + "?join=" + encodedRoom;
 
-        // Die Nachricht mit Fettschrift (*...*) für WhatsApp
         const message = "*Komm in meine Eisstockgruppe* \n\n" +
                         "Code: *" + room + "*\n" +
                         "Hier beitreten: " + inviteLink;
 
         if (window.AndroidInterface && window.AndroidInterface.shareToWhatsApp) {
-            // Android App Interface
             window.AndroidInterface.shareToWhatsApp(message);
         } else {
-            // Normale Webseite (direkt zu WhatsApp)
             const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(message);
             window.open(whatsappUrl, '_blank');
         }
@@ -504,7 +526,3 @@
 </script>
 </body>
 </html>
-
-
-
-
