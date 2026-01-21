@@ -112,10 +112,10 @@
             <input type="checkbox" id="set-reset0" style="width:20px; height:20px;">
             <label style="font-size:14px; font-weight:bold;">Gegner bei Sieg auf 0 setzen</label>
         </div>
-        
+
         <div class="check-row">
-            <input type="checkbox" id="set-openend" style="width:20px; height:20px;">
-            <label style="font-size:14px; font-weight:bold;">Über Ziel hinaus spielen (Open End)</label>
+            <input type="checkbox" id="set-endless" style="width:20px; height:20px;">
+            <label style="font-size:14px; font-weight:bold; color: #00BFFF;">Endloses Spiel (Kein Sieg-Limit)</label>
         </div>
 
         <button class="btn-save" onclick="saveSettings()">Speichern & Zurück</button>
@@ -178,8 +178,7 @@
         return result;
     }
 
-    // Default Config mit neuem Feld oe (open end)
-    const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true, oe: false };
+    const DEFAULTS = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true, endless: false };
     let config = JSON.parse(localStorage.getItem('es_v3_cfg')) || {...DEFAULTS};
     let state = { ga:0, pa:0, gb:0, pb:0, win: false, history: [], hIdx: -1 };
     let room = localStorage.getItem('es_room');
@@ -248,22 +247,25 @@
         
         if(team === 'A') { 
             n.pa += p; 
-            // Siegprüfung nur wenn OPEN END deaktiviert ist
-            if(!config.oe && n.pa >= config.pw) { 
-                n.ga++; n.pa = 0; if(config.r0) n.pb = 0; 
+            if(n.pa >= config.pw) { 
+                n.ga++; 
+                n.pa = 0; 
+                if(config.r0) n.pb = 0; 
             } 
-        }
-        else { 
+        } else { 
             n.pb += p; 
-            // Siegprüfung nur wenn OPEN END deaktiviert ist
-            if(!config.oe && n.pb >= config.pw) { 
-                n.gb++; n.pb = 0; if(config.r0) n.pa = 0; 
+            if(n.pb >= config.pw) { 
+                n.gb++; 
+                n.pb = 0; 
+                if(config.r0) n.pa = 0; 
             } 
         }
-        
-        // Spielende Logik
-        if(!config.oe) {
+
+        // Win-Prüfung nur, wenn ENDLESS aus ist
+        if(!config.endless) {
             if((n.ga + n.gb) === 3 || n.ga >= 3 || n.gb >= 3) n.win = true;
+        } else {
+            n.win = false; // Zur Sicherheit im Endlos-Modus immer false
         }
         
         broadcast(updateHistory(n));
@@ -306,7 +308,8 @@
         document.getElementById('card-b').style.borderColor = config.cb;
         document.documentElement.style.setProperty('--color-a', config.ca);
         document.documentElement.style.setProperty('--color-b', config.cb);
-        if(state.win) {
+        
+        if(state.win && !config.endless) {
             const winA = state.ga >= 3;
             const isTriple = (state.ga === 3 || state.gb === 3) && (state.ga === 0 || state.gb === 0);
             document.getElementById('win-label').innerText = (winA ? config.na : config.nb) + " GEWINNT!";
@@ -334,7 +337,7 @@
 
     window.resetToDefaults = () => {
         vibrate();
-        config = { na:"Team A", nb:"Team B", ca:"#00BFFF", cb:"#FF4500", p1:6, pn:3, pw:12, pe:0.50, pe3:1.50, r0: true, oe: false };
+        config = {...DEFAULTS};
         localStorage.setItem('es_v3_cfg', JSON.stringify(config));
         render();
         openSettings();
@@ -352,7 +355,7 @@
         document.getElementById('set-pe').value = config.pe;
         document.getElementById('set-pe3').value = config.pe3;
         document.getElementById('set-reset0').checked = config.r0;
-        document.getElementById('set-openend').checked = config.oe || false;
+        document.getElementById('set-endless').checked = config.endless || false;
         
         document.getElementById('user-name').value = localStorage.getItem('es_name') || "";
         document.getElementById('settings').style.display = 'block';
@@ -370,7 +373,7 @@
         config.pe = parseFloat(document.getElementById('set-pe').value);
         config.pe3 = parseFloat(document.getElementById('set-pe3').value);
         config.r0 = document.getElementById('set-reset0').checked;
-        config.oe = document.getElementById('set-openend').checked;
+        config.endless = document.getElementById('set-endless').checked;
         
         localStorage.setItem('es_v3_cfg', JSON.stringify(config));
 
@@ -438,7 +441,7 @@
                     initSession();
                 });
             } else {
-                alert("Raum " + c + " nicht gefunden! (Groß-/Kleinschreibung beachten)");
+                alert("Raum " + c + " nicht gefunden!");
             }
         });
     };
@@ -458,14 +461,6 @@
             }
 
             const data = snap.val();
-            const ageInHours = (Date.now() - (data.createdAt || 0)) / (1000 * 60 * 60);
-            if (data.createdAt && ageInHours > 24) {
-                remove(ref(db, 'rooms/' + room));
-                alert("Dieser Raum ist abgelaufen (24h Regel).");
-                leaveRoom();
-                return;
-            }
-
             state = data.state;
             config = data.settings;
             const list = document.getElementById('member-list'); list.innerHTML = "";
@@ -485,9 +480,7 @@
 
     window.shareWhatsApp = () => {
         vibrate();
-
         const webUrl = "https://zumtesten58-hash.github.io/eisstockprofi-web/";
-
         const superEncode = (str) => {
             return str.split('').map(char => {
                 if (/[a-zA-Z0-9]/.test(char)) return char;
@@ -495,10 +488,8 @@
                 return '%' + (hex.length < 2 ? '0' + hex : hex);
             }).join('');
         };
-
         const encodedRoom = superEncode(room);
         const inviteLink = webUrl + "?join=" + encodedRoom;
-
         const message = "*Komm in meine Eisstockgruppe* \n\n" +
                         "Code: *" + room + "*\n" +
                         "Hier beitreten: " + inviteLink;
@@ -510,17 +501,12 @@
             window.open(whatsappUrl, '_blank');
         }
     };
+
     window.setTab = (n) => { vibrate(); document.getElementById('s1').style.display = n === 1 ? 'block' : 'none'; document.getElementById('s2').style.display = n === 2 ? 'block' : 'none'; document.getElementById('t1').className = n === 1 ? 'tab active' : 'tab'; document.getElementById('t2').className = n === 2 ? 'tab active' : 'tab'; };
 
     const urlParams = new URLSearchParams(window.location.search);
     const joinCode = urlParams.get('join');
-
-    if(joinCode) {
-        setTimeout(() => joinGame(joinCode), 500);
-    } else if(room) {
-        initSession();
-    }
-
+    if(joinCode) { setTimeout(() => joinGame(joinCode), 500); } else if(room) { initSession(); }
     if(state.hIdx === -1) state = updateHistory(state);
     render();
 </script>
