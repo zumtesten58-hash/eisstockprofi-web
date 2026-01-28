@@ -310,7 +310,7 @@
         document.documentElement.style.setProperty('--color-b', config.cb);
         
         if(state.win && !config.endless) {
-            const winA = state.ga >= 3;
+            const winA = state.ga > state.gb;
             const isTriple = (state.ga === 3 || state.gb === 3) && (state.ga === 0 || state.gb === 0);
             document.getElementById('win-label').innerText = (winA ? config.na : config.nb) + " GEWINNT!";
             document.getElementById('win-label').style.color = winA ? config.ca : config.cb;
@@ -512,3 +512,4 @@
 </script>
 </body>
 </html>
+
